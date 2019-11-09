@@ -288,21 +288,38 @@ if __name__ == "__main__":
     print "--------------------------------------------"
     ### Padding sequence ....
     x_test = pad_sequences(data[0], maxlen=seq_len, dtype='int32', padding='post', truncating='post', value=0)
+    print "type of x_test %s"%type(x_test)
+    print "shape of x_test: {}".format(x_test.shape)
     x_test = x_test + 1
     y = pad_sequences(data[1], maxlen=seq_len, dtype='int32', padding='post', truncating='post', value=0)
+    print "type of y %s"%type(y)
+    print "shape of y: {}".format(y.shape)
     y_test = np.zeros((data_num, seq_len, 2), dtype=y.dtype)
+    print "type of y_test %s"%type(y_test)
+    print "shape of y_test: {}".format(y_test.shape)
+    # print "y_test[1]: {}".format(y_test[1])
     flag = 0
     for test_id in xrange(data_num):
         flag += 1
         y_test[test_id, np.arange(seq_len), y[test_id]] = 1
+        # if test_id == 7:
+        # if flag > 16 and flag < 25:
+            # print "y[{}]: {}".format(test_id, y[test_id])
+            # print "y_test[1]: {}".format(y_test[test_id])
+
+    # sys.exit(0)
 
     #idx is the row of nonzero datapoint
     idx = np.nonzero(y)[0]
     n1 = idx.shape[0]
+    print 'num of nonzero datapoints by row is(have duplicate row) ', n1
+    print 'idx[0:20] is ', idx[0:20]
 
     #start_points is the col of nonzero datapoint  
     start_points = np.nonzero(y)[1]
     n2 = start_points.shape[0]
+    print "num of nozero datapoints by col is: ", n2
+    print 'start_points[0:20] is', start_points[0:20]
 
     n_pos = 0
     n_new = 0
@@ -318,12 +335,20 @@ if __name__ == "__main__":
     #print x_test[idx,start_points]
     # sys.exit(0)
 
-    for i in xrange(len(x_test)):
+    print "-----------------start(loop)------------------------------------"
+    # for i in xrange(len(x_test)):
+    for i in range(44,45):
+    # for i in range(1,20):
         if i in idx:
+            print "===========start(seq_id = row of function start: {} ): ======".format(i)
             #print '\n------>', i
             idx_Col = np.where(idx == i)
+            #idx_Row is the col list of a function start
             idx_Row = start_points[idx_Col]
+            # print 'idx_Col= the col index list of function start ...',idx_Col
+            print 'idx_Row= the col list of a function start ...', idx_Row
             
+            # binary_func_start is the binary value list of these function start
             binary_func_start = x_test[i][idx_Row]
             print 'binary_func_start ...', x_test[i][idx_Row]
             x_test_d = x_test[i:i + 1]
@@ -331,6 +356,7 @@ if __name__ == "__main__":
             # sys.exit(0)
 
             for j in xrange(len(idx_Row)):
+                print '===========start(j = col of function start: {}|{})===='.format(i, idx_Row[j])
                 # print 'seq_id', i
                 # print 'function_start', binary_func_start[j]
                 # print 'start_position', idx_Row[j]
