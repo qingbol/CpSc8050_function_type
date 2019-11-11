@@ -59,6 +59,7 @@ class xai_rnn(object):
 
     def truncate_seq(self, trunc_len):
         """ Generate truncated data sample
+        function: take the data which are in tunc_len/2 far from function start
         Args:
             trun_len: the lenght of the truncated data sample.
 
@@ -160,8 +161,14 @@ class xai_rnn(object):
         cen = self.seq_len/2
         half_tl = self.tl/2
         sample = np.random.randint(1, self.tl+1, samp_num)
-        # print "sample len", len(sample)
+        print "sample len", len(sample)
+        print "sample shape: ", sample.shape
+        print "type of smaple", type(sample)
+        # print "sample data: ", sample
         features_range = range(self.tl+1)
+        print "feature_range type: ", type(features_range)
+        print "feature_range len", len(features_range)
+        print "feature_range data: ", features_range
         data_explain = np.copy(self.trunc_data).reshape(1, self.trunc_data.shape[0])
         data_sampled = np.copy(self.trunc_data_test)
         for i, size in enumerate(sample, start=1):
@@ -170,8 +177,12 @@ class xai_rnn(object):
             tmp_sampled = np.copy(self.trunc_data)
             tmp_sampled[inactive] = 0
             #tmp_sampled[inactive] = np.random.choice(range(257), size, replace = False)
+            # print "shape of tmp_sampled befor reshape", tmp_sampled.shape
             tmp_sampled = tmp_sampled.reshape(1, self.trunc_data.shape[0])
+            # print "shape of tmp_sampled after reshape", tmp_sampled.shape
             data_explain = np.concatenate((data_explain, tmp_sampled), axis=0)
+            # print "type of data_explain", type(data_explain)
+            # print "shape of data_explain", data_explain.shape
             data_sampled_mutate = np.copy(self.data)
             if self.real_sp < half_tl:
                 data_sampled_mutate[0, 0:tmp_sampled.shape[1]] = tmp_sampled
@@ -180,27 +191,59 @@ class xai_rnn(object):
             else:
                 data_sampled_mutate[0, (self.real_sp - half_tl):(self.real_sp + half_tl + 1)] = tmp_sampled
             data_sampled = np.concatenate((data_sampled, data_sampled_mutate),axis=0)
+        print "type of data_sampled", type(data_sampled)
+        print "shape of data_sampled", data_sampled.shape
+        print "type of data_explain", type(data_explain)
+        print "shape of data_explain", data_explain.shape
 
         if option == "Fixed":
             print "Fix start points"
             data_sampled[:, self.real_sp] = self.start
+        label_sampled_original = self.model.predict(data_sampled, verbose = 0)
+        print "type of label_sampled_original", type(label_sampled_original)
+        print "shape of label_sampled_original", label_sampled_original.shape
         label_sampled = self.model.predict(data_sampled, verbose = 0)[:, self.real_sp, 1]
+        print "type of label_sampled", type(label_sampled)
+        print "shape of label_sampled", label_sampled.shape
         label_sampled = label_sampled.reshape(label_sampled.shape[0], 1)
         print 'num of label_sampled is...',len(label_sampled), 'row...', label_sampled.shape[0], 'col...', label_sampled.shape[1]
         print 'num of data_explain is ...',len(data_explain), 'row...',data_explain.shape[0], 'col...', data_explain.shape[1]
         X = r.matrix(data_explain, nrow = data_explain.shape[0], ncol = data_explain.shape[1])
+        print "type of X", type(X)
+        # print "X data: ", X
         Y = r.matrix(label_sampled, nrow = label_sampled.shape[0], ncol = label_sampled.shape[1])
+        print "type of Y", type(Y)
+        # print "Y data: ", Y
 
         n = r.nrow(X)
         p = r.ncol(X)
         results = r.fusedlasso1d(y=Y,X=X)
+        print "type of results: {}|row: {}|col: {}".format(type(results),r.nrow(results),r.ncol(results))
+        result_original = np.array(r.coef(results, np.sqrt(n*np.log(p)))[0])
+        print "type of result_original: ", type(result_original)
+        print "shape of result_original: ", result_original.shape
         result = np.array(r.coef(results, np.sqrt(n*np.log(p)))[0])[:,-1]
+        print "type of result: ", type(result)
+        print "shape of result: ", result.shape
+        print "data of result: ", result
+
+        importance_score_original = np.argsort(result)
+        print "type of importance_score_original: ", type(importance_score_original)
+        print "shape of importance_score_original: ", importance_score_original.shape
+        print "data of importance_score_original: ", importance_score_original
 
         importance_score = np.argsort(result)[::-1]
+        print "type of importance_score: ", type(importance_score)
+        print "shape of importance_score: ", importance_score.shape
+        print "data of importance_score: ", importance_score
         #print 'importance_score ...',importance_score 
         self.fea = (importance_score-self.tl/2)+self.real_sp
+        print "type of self.fea 1: ", type(self.fea)
+        print "data of self.fea 1: ", self.fea
         self.fea = self.fea[np.where(self.fea<200)]
+        print "data of self.fea 2: ", self.fea
         self.fea = self.fea[np.where(self.fea>=0)]
+        print "data of self.fea 3: ", self.fea
         #print 'self.fea ...',self.fea
         return self.fea
 
@@ -337,7 +380,8 @@ if __name__ == "__main__":
 
     print "-----------------start(loop)------------------------------------"
     # for i in xrange(len(x_test)):
-    for i in range(44,45):
+    for i in range(7,8):
+    # for i in range(44,45):
     # for i in range(1,20):
         if i in idx:
             print "===========start(seq_id = row of function start: {} ): ======".format(i)
@@ -356,7 +400,7 @@ if __name__ == "__main__":
             # sys.exit(0)
 
             for j in xrange(len(idx_Row)):
-                print '===========start(j = col of function start: {}|{})===='.format(i, idx_Row[j])
+                print '===========start(row=i | col=j of function start: {}|{})===='.format(i, idx_Row[j])
                 # print 'seq_id', i
                 # print 'function_start', binary_func_start[j]
                 # print 'start_position', idx_Row[j]
@@ -367,25 +411,28 @@ if __name__ == "__main__":
                 if prob_start > 0.5:
                 # if xai_test.pred[0, 1] > 0.5:
                     truncate_seq_data = xai_test.truncate_seq(40)
+                    print "self.tunc_data :", truncate_seq_data
                     xai_fea = xai_test.xai_feature(500)
                     fea = np.zeros_like(xai_test.data)
+                    print "type of fea: ", type(fea)
+                    print "shape of fea: ", fea.shape
                     fea[0, xai_fea[0:25]] = xai_test.data[0, xai_fea[0:25]]
                     print 'fea...',fea
                     print 'xai fea-idx row[j]...',xai_fea - idx_Row[j]
-                    print '==================================================='
+                    # print '==================================================='
                     fid_tt = fid_test(xai_test)
 
                     test_data, P1, P2 = fid_tt.pos_boostrap_exp(n_fea_select)
-                    print 'Pos fide test probability >>>', P1, P2
-                    print 'Expect a low probability'
+                    # print 'Pos fide test probability >>>', P1, P2
+                    # print 'Expect a low probability'
                     if P1 > 0.5:
                        n_pos = n_pos + 1
                     if P2 > 0.5:
                        n_pos_rand = n_pos_rand + 1
 
                     test_data, P_test_1, P_test_2 = fid_tt.new_test_exp(n_fea_select)
-                    print 'New fide test probability >>>', P_test_1
-                    print 'Expect a high probability'
+                    # print 'New fide test probability >>>', P_test_1
+                    # print 'Expect a high probability'
                     if P_test_1> 0.5:
                        n_new = n_new + 1
                     if P_test_2 > 0.5:
@@ -393,8 +440,8 @@ if __name__ == "__main__":
 
                     test_seed = x_test[0, ]
                     neg_test_data, P_neg_1, P_neg_2 = fid_tt.neg_boostrap_exp(test_seed, n_fea_select)
-                    print 'Neg fide test probability >>>', P_neg_1
-                    print 'Expect a high probability'
+                    # print 'Neg fide test probability >>>', P_neg_1
+                    # print 'Expect a high probability'
                     if P_neg_1 > 0.5:
                        n_neg = n_neg + 1
                     if P_neg_2 > 0.5:
