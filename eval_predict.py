@@ -48,7 +48,7 @@ def fill_feed_dict(data_set, batch_size, data_tag, keep_prob, data_pl, label_pl,
 
 class Model(object):
     # def __init__(self, session, my_data, config_info, data_pl, label_pl, length_pl, keep_prob_pl):
-    def __init__(self, session,  feed_data_dict, config_info, data_pl, length_pl, keep_prob_pl):
+    def __init__(self, session,  feed_data_dict, config_info, data_pl, label_pl, length_pl, keep_prob_pl):
         self.session = session
         # self.datasets = my_data
         self.feed_data_dict = feed_data_dict
@@ -59,7 +59,7 @@ class Model(object):
         self.batch_size = int(config_info['batch_size'])
 
         self._data = data_pl
-        # self._label = label_pl
+        self._label = label_pl
         self._length = length_pl
         # self._keep_prob = 1.0
         self._keep_prob = keep_prob_pl
@@ -153,6 +153,7 @@ class Model(object):
         }
         feed_dict = {
             self._data: self.feed_data_dict['data'],
+            self._label: self.feed_data_dict['label'],
             self._length: self.feed_data_dict['length'],
             self._keep_prob: self.feed_data_dict['keep_prob_pl']
         }
@@ -248,7 +249,7 @@ def testing(config_info, feed_data_dict):
         # generate placeholder
         data_pl, label_pl, length_pl, keep_prob_pl = placeholder_inputs(num_classes, max_length, embed_dim)
         # generate model
-        model = Model(session, feed_data_dict, config_info, data_pl, length_pl, keep_prob_pl)
+        model = Model(session, feed_data_dict, config_info, data_pl, label_pl, length_pl, keep_prob_pl)
         # model = Model(session, my_data, config_info, data_pl, label_pl, length_pl, keep_prob_pl)
         print('Created the model!')
 
