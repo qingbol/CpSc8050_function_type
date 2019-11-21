@@ -1,15 +1,27 @@
 '''
 for test the converter
 '''
-import numpy as np
-import pickle
-import argparse
-import eval
-import eval_predict
-import converter
-import dataset
-import sys
+
+from rpy2 import robjects
+from rpy2.robjects.packages import importr
+import rpy2.robjects.numpy2ri
 import os
+import sys
+import dataset
+import converter
+import eval_predict
+import eval
+import argparse
+import cPickle as pickle
+import numpy as np
+np.random.seed(1234)
+#np.set_printoptions(threshold = 1e6)
+np.set_printoptions(threshold=sys.maxsize) 
+
+r = robjects.r
+rpy2.robjects.numpy2ri.activate()
+importr('genlasso')
+# importr('gsubfn')
 
 
 def get_config():
@@ -101,17 +113,20 @@ def xai_function_type(embed_data_array, int_data_array):
         # print "type of inactive", type(inactive)
         # print 'inactive --->', inactive
         tmp_embed = np.copy(embed_data_array)
+        tmp_embed[inactive] = 0
+        tmp_embed = tmp_embed.reshape(1, tl, tc)
+        data_embed = np.concatenate((data_embed, tmp_embed), axis=0)
+
         tmp_int = np.copy(int_data_array)
         tmp_int[inactive] = 0
-        # tmp_int[inactive] = np.random.choice( range(257), size, replace=False)
-        # print "shape of tmp_satmp_intmpled befor reshape", tmp_int.shape
-        tmp_embed = tmp_embed.reshape(1, tl, tc)
-        # print "shape of tmp_embed after reshape", tmp_embed.shape
-        data_embed = np.concatenate((data_embed, tmp_embed), axis=0)
+        tmp_int = tmp_int.reshape(1, tl)
+        data_int = np.concatenate((data_int, tmp_int), axis=0)
         # print "type of data_embed", type(data_embed)
         # print "shape of data_embed", data_embed.shape
-    print "type of data_embed", type(data_embed)
-    print "shape of data_embed", data_embed.shape
+    # print "type of data_embed", type(data_embed)
+    # print "shape of data_embed", data_embed.shape
+    print "type of tmp_int", type(data_int)
+    print "shape of tmp_int", data_int.shape
 
     # ---------start(prepare the dict which feed to eval)------------------------
     data_length = np.empty(sample_num + 1)
@@ -138,15 +153,37 @@ def xai_function_type(embed_data_array, int_data_array):
     # print "data of feed_dict2[data_pl]", feed_batch_dict2['data'][0]
     # --------- end (prepare the dict which feed to eval)------------------------
 
-    eval_predict.main(feed_batch_dict2)
+    # ---------start(predict the label of 500 data)-----------------------------
+    total_result = eval_predict.main(feed_batch_dict2)
+    label_sampled = total_result.reshape(sample_num + 1, 1)
+    print "label in total_result['pred']", type(label_sampled)
+    print "label in total_result['pred']", label_sampled.shape
+    # print "label in total_result['pred']", total_result
+    # --------- end (predict the label of 500 data)-----------------------------
 
-    # convert int to hex(bin)
-    # bin_data_list = [int2insn_map[k]
-    #                  for k in int_data_list if k in int2insn_map]
-    # bin_data_list = [int2insn_map[int(k)] for k in int_data_list if int(k) in int2insn_map]
-    # print "type of bin_data_list", type(bin_data_list)
-    # print "len of bin_data_list", len(bin_data_list)
-    # print "data of bin_data_list", bin_data_list
+    # ---------start(prepare the input data for regression model)---------------
+    X = r.matrix(data_embed, nrow = data_embed.shape[0], ncol = data_embed.shape[1])
+    # X = r.matrix(data_int, nrow = data_int.shape[0], ncol = data_int.shape[1])
+    print "type of X", type(X)
+    # print "X data: ", X
+    Y = r.matrix(label_sampled, nrow = label_sampled.shape[0], ncol = label_sampled.shape[1])
+    print "type of Y", type(Y)
+    # print "Y data: ", Y
+
+    n = r.nrow(X)
+    p = r.ncol(X)
+    results = r.fusedlasso1d(y=Y,X=X)
+    print "type of results: {}|row: {}|col: {}".format(type(results),r.nrow(results),r.ncol(results))
+    result_original = np.array(r.coef(results, np.sqrt(n*np.log(p)))[0])
+    print "type of result_original: ", type(result_original)
+    print "shape of result_original: ", result_original.shape
+    result = np.array(r.coef(results, np.sqrt(n*np.log(p)))[0])[:,-1]
+    print "type of result: ", type(result)
+    print "shape of result: ", result.shape
+    # result_round=np.around(result, decimals=1)
+    # print "data of result:{res:.2e} ".format(res=result)
+    print "data of result: ",np.array_str(result, precision=2)
+    # --------- end (prepare the input data for regression model)---------------
 
 
 def main():
@@ -188,7 +225,7 @@ def main():
     }
     print "type of feed_batch_dict1['data']", type(feed_batch_dict1['data'])
     print "len of feed_batch_dict1['data']", len(feed_batch_dict1['data'])
-    print "data of feed_batch_dict1['data']", feed_batch_dict1['data']
+    # print "data of feed_batch_dict1['data']", feed_batch_dict1['data']
     # eval_predict.main(feed_batch_dict1)
     # ------------ end (retriev the target function data)------------------------
 

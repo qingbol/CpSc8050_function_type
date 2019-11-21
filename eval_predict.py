@@ -236,6 +236,8 @@ def testing(config_info, feed_data_dict):
             result_path = os.path.join(
                 output_dir, 'test_result_%d_pred.pkl' % model_id)
             if os.path.exists(result_path):
+                with open(result_path, 'r') as f:
+                    total_result = pickle.load(f)
                 continue
             else:
                 pass
@@ -250,6 +252,7 @@ def testing(config_info, feed_data_dict):
             with open(result_path, 'w') as f:
                 pickle.dump(total_result, f)
             print('Save the test result !!! ... %s' % result_path)
+    return total_result
 
 
 def get_config():
@@ -320,7 +323,8 @@ def get_config():
 
 def main(feed_data_dict):
     config_info = get_config()
-    testing(config_info, feed_data_dict)
+    total_result = testing(config_info, feed_data_dict)
+    return total_result
 
 
 if __name__ == '__main__':
