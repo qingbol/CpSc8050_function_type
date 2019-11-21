@@ -9,6 +9,8 @@
 #ignore CpSc8580Lemna_fuction_type
 data/
 target_model/
+tmp/
+eval_output/
 
 #c program
 *.o
