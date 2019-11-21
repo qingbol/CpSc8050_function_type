@@ -88,6 +88,9 @@ class xai_rnn(object):
             self.trunc_data_test[0, (cen - half_tl):(cen + half_tl + 1)] = self.data[0, (self.real_sp - half_tl):(self.real_sp + half_tl + 1)]
 
         self.trunc_data = self.trunc_data_test[0, (cen - half_tl):(cen + half_tl + 1)]
+        print "type of self.tunc_data", type(self.trunc_data)
+        print "shape of self.tunc_data", self.trunc_data.shape
+        print "data of self.tunc_data", self.trunc_data
         return self.trunc_data
 
 

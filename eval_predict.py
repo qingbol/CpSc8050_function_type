@@ -24,11 +24,13 @@ def lazy_property(function):
 
 
 # def placeholder_inputs(class_num, max_length= 500, embedding_dim= 256):
-def placeholder_inputs(class_num, max_length, embedding_dim= 256):
-    data_placeholder = tf.placeholder(tf.float32, [None, max_length, embedding_dim])
+def placeholder_inputs(class_num, max_length, embedding_dim=256):
+    data_placeholder = tf.placeholder(
+        tf.float32, [None, max_length, embedding_dim])
     label_placeholder = tf.placeholder(tf.float32, [None, class_num])
-    length_placeholder = tf.placeholder(tf.int32, [None,])
-    keep_prob_placeholder = tf.placeholder(tf.float32) # dropout (keep probability)
+    length_placeholder = tf.placeholder(tf.int32, [None, ])
+    keep_prob_placeholder = tf.placeholder(
+        tf.float32)  # dropout (keep probability)
     return data_placeholder, label_placeholder, length_placeholder, keep_prob_placeholder
 
 
@@ -42,7 +44,7 @@ def fill_feed_dict(data_set, batch_size, data_tag, keep_prob, data_pl, label_pl,
         length_pl: data_batch['length'],
         keep_prob_pl: keep_prob
     }
-    #add data_batach['data'] for get the instruction
+    # add data_batach['data'] for get the instruction
     return feed_dict, data_batch['func_name'], data_batch['data'], data_batch['inst_bytes']
 
 
@@ -79,15 +81,18 @@ class Model(object):
             def attn_cell():
                 return tf.contrib.rnn.DropoutWrapper(
                     lstm_cell(), output_keep_prob=self._keep_prob)
-        single_cell = tf.contrib.rnn.MultiRNNCell([attn_cell() for _ in range(self.num_layers)], state_is_tuple=True)
+        single_cell = tf.contrib.rnn.MultiRNNCell(
+            [attn_cell() for _ in range(self.num_layers)], state_is_tuple=True)
 
         output, state = tf.nn.dynamic_rnn(single_cell, self._data, dtype=tf.float32,
                                           sequence_length=self._length)
-        weight = tf.Variable(tf.truncated_normal([self.emb_dim, self.num_classes], stddev=0.01))
+        weight = tf.Variable(tf.truncated_normal(
+            [self.emb_dim, self.num_classes], stddev=0.01))
         bias = tf.Variable(tf.constant(0.1, shape=[self.num_classes]))
 
         self.output = output
-        probability = tf.matmul(self.last_relevant(output, self._length), weight) + bias
+        probability = tf.matmul(self.last_relevant(
+            output, self._length), weight) + bias
         return probability
 
     def last_relevant(self, output, length):
@@ -157,43 +162,14 @@ class Model(object):
             self._length: self.feed_data_dict['length'],
             self._keep_prob: self.feed_data_dict['keep_prob_pl']
         }
-        pred_result = self.session.run(self.pred_label, feed_dict = feed_dict)
+        pred_result = self.session.run(self.pred_label, feed_dict=feed_dict)
         print "type in pred_result", type(pred_result)
         print "len in pred_result", len(pred_result)
         print "data in pred_result", pred_result
         predict_result['pred'].append(pred_result)
-        print "type in predict_result['pred']", type(predict_result['pred'])
-        print "len in predict_result['pred']", len(predict_result['pred'])
-        print "data in predict_result['pred']", predict_result['pred'][0]
-        # total_result = {
-        #     'cost': [],
-        #     'pred': [],
-        #     'func_name': [],
-        #     'data': [],
-        #     'inst_bytes': []
-        # }
-        # run_step = 0
-
-        # while self.datasets.test_tag:
-        #     run_step += 1
-        #     if run_step > 1:
-        #         break
-
-            # feed_dict, func_name_list, data_list,inst_bytes = fill_feed_dict(self.datasets, self.batch_size, 'test', 1.0,
-            #                                            self._data, self._label, self._length, self._keep_prob)
-            # cost_result, pred_result = self.session.run(
-            #     [self.cost_list, self.pred_label],
-            #     feed_dict = feed_dict
-            # )
-            # total_result['cost'].append(cost_result)
-            # total_result['pred'].append(pred_result)
-            # total_result['func_name'].append(func_name_list)
-            # total_result['data'].append(data_list)
-            # total_result['inst_bytes'].append(inst_bytes)
-            # print "data in total_result", total_result['data']
-            # print "data in total_result['data']", total_result['data'][0][0]
-            # print "type of inst_bytes in total_result", type(total_result['inst_bytes'])
-            # print "data in total_result['inst_bytes']", total_result['inst_bytes']
+        # print "type in predict_result['pred']", type(predict_result['pred'][0])
+        # print "len in predict_result['pred']", len(predict_result['pred'][0])
+        # print "data in predict_result['pred']", predict_result['pred'][0]
         return pred_result
 
 
@@ -233,7 +209,7 @@ def testing(config_info, feed_data_dict):
     '''load dataset'''
     # if data_tag == 'callee':
     #     my_data = dataset.Dataset(data_folder, func_path, embed_path, process_num, embed_dim, max_length, num_classes, tag, int2insn_path)
-        # my_data = dataset.Dataset(data_folder, func_path, embed_path, process_num, embed_dim, max_length, num_classes, tag)
+    # my_data = dataset.Dataset(data_folder, func_path, embed_path, process_num, embed_dim, max_length, num_classes, tag)
     # else: # caller
     #     my_data = dataset_caller.Dataset(data_folder, func_path, embed_path, process_num, embed_dim, max_length, num_classes, tag)
     # print('Created the dataset!')
@@ -247,15 +223,18 @@ def testing(config_info, feed_data_dict):
 
     with tf.Graph().as_default(), tf.Session() as session:
         # generate placeholder
-        data_pl, label_pl, length_pl, keep_prob_pl = placeholder_inputs(num_classes, max_length, embed_dim)
+        data_pl, label_pl, length_pl, keep_prob_pl = placeholder_inputs(
+            num_classes, max_length, embed_dim)
         # generate model
-        model = Model(session, feed_data_dict, config_info, data_pl, label_pl, length_pl, keep_prob_pl)
+        model = Model(session, feed_data_dict, config_info,
+                      data_pl, label_pl, length_pl, keep_prob_pl)
         # model = Model(session, my_data, config_info, data_pl, label_pl, length_pl, keep_prob_pl)
         print('Created the model!')
 
         for model_id in model_id_list:
             print "entering for model_id"
-            result_path = os.path.join(output_dir, 'test_result_%d_pred.pkl' % model_id)
+            result_path = os.path.join(
+                output_dir, 'test_result_%d_pred.pkl' % model_id)
             if os.path.exists(result_path):
                 continue
             else:
@@ -279,29 +258,44 @@ def get_config():
     '''
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('-i', '--int2insn_map_path', dest='int2insn_path', help='The pickle file saving int -> instruction mapping.', type=str, required=False, default='/Users/tarus/TarusHome/10SrcFldr/CpSc8580EKLAVYA_py27/code/embedding/int2insn.map')
+    parser.add_argument('-i', '--int2insn_map_path', dest='int2insn_path', help='The pickle file saving int -> instruction mapping.',
+                        type=str, required=False, default='/Users/tarus/TarusHome/10SrcFldr/CpSc8580EKLAVYA_py27/code/embedding/int2insn.map')
     # parser.add_argument('-i', '--int2insn_map_path', dest='int2insn_path', help='The pickle file saving int -> instruction mapping.', type=str, required=True)
-    parser.add_argument('-d', '--data_folder', dest='data_folder', help='The data folder of testing dataset.', type=str, required=False,default='/Users/tarus/OnlyInMac/dataset/eklavya/clean_pickles/x64')
+    parser.add_argument('-d', '--data_folder', dest='data_folder', help='The data folder of testing dataset.',
+                        type=str, required=False, default='/Users/tarus/OnlyInMac/dataset/eklavya/clean_pickles/x64')
     # parser.add_argument('-d', '--data_folder', dest='data_folder', help='The data folder of testing dataset.', type=str, required=True)
-    parser.add_argument('-f', '--split_func_path', dest='func_path', help='The path of file saving the training & testing function names.', type=str, required=False, default='/Users/tarus/TarusHome/10SrcFldr/CpSc8580EKLAVYA_py27/code/embedding/func_list/func_dict_x64_len10.lst')
+    parser.add_argument('-f', '--split_func_path', dest='func_path', help='The path of file saving the training & testing function names.',
+                        type=str, required=False, default='/Users/tarus/TarusHome/10SrcFldr/CpSc8580EKLAVYA_py27/code/embedding/func_list/func_dict_x64_len10.lst')
     # parser.add_argument('-f', '--split_func_path', dest='func_path', help='The path of file saving the training & testing function names.', type=str, required=True)
-    parser.add_argument('-e', '--embed_path', dest='embed_path', help='The path of file saving embedding vectors.', type=str, required=False,default='/Users/tarus/OnlyInMac/dataset/eklavya/embed.pkl')
+    parser.add_argument('-e', '--embed_path', dest='embed_path', help='The path of file saving embedding vectors.',
+                        type=str, required=False, default='/Users/tarus/OnlyInMac/dataset/eklavya/embed.pkl')
     # parser.add_argument('-e', '--embed_path', dest='embed_path', help='The path of file saving embedding vectors.', type=str, required=True)
-    parser.add_argument('-o', '--output_dir', dest='output_dir', help='The directory to saved the evaluation result.', type=str, required=False, default='eval_output')
+    parser.add_argument('-o', '--output_dir', dest='output_dir',
+                        help='The directory to saved the evaluation result.', type=str, required=False, default='eval_output')
     # parser.add_argument('-o', '--output_dir', dest='output_dir', help='The directory to saved the evaluation result.', type=str, required=True)
-    parser.add_argument('-m', '--model_dir', dest='model_dir', help='The directory saved the models.', type=str, required=False,default='/Users/tarus/OnlyInMac/dataset/eklavya/rnn_output/model')
+    parser.add_argument('-m', '--model_dir', dest='model_dir', help='The directory saved the models.',
+                        type=str, required=False, default='/Users/tarus/OnlyInMac/dataset/eklavya/rnn_output/model')
     # parser.add_argument('-m', '--model_dir', dest='model_dir', help='The directory saved the models.', type=str, required=True)
-    parser.add_argument('-t', '--label_tag', dest='tag', help='The type of labels. Possible value: num_args, type#0, type#1, ...', type=str, required=False, default='num_args')
-    parser.add_argument('-dt', '--data_tag', dest='data_tag', help='The type of input data.', type=str, required=False, choices=['caller', 'callee'], default='callee')
-    parser.add_argument('-pn', '--process_num', dest='process_num', help='Number of processes.', type=int, required=False, default=4)
-    parser.add_argument('-ed', '--embedding_dim', dest='embed_dim', help='The dimension of embedding vector.', type=int, required=False, default=256)
+    parser.add_argument('-t', '--label_tag', dest='tag',
+                        help='The type of labels. Possible value: num_args, type#0, type#1, ...', type=str, required=False, default='num_args')
+    parser.add_argument('-dt', '--data_tag', dest='data_tag', help='The type of input data.',
+                        type=str, required=False, choices=['caller', 'callee'], default='callee')
+    parser.add_argument('-pn', '--process_num', dest='process_num',
+                        help='Number of processes.', type=int, required=False, default=4)
+    parser.add_argument('-ed', '--embedding_dim', dest='embed_dim',
+                        help='The dimension of embedding vector.', type=int, required=False, default=256)
     # parser.add_argument('-ml', '--max_length', dest='max_length', help='The maximun length of input sequences.', type=int, required=False, default=10)
-    parser.add_argument('-ml', '--max_length', dest='max_length', help='The maximun length of input sequences.', type=int, required=False, default=10)
+    parser.add_argument('-ml', '--max_length', dest='max_length',
+                        help='The maximun length of input sequences.', type=int, required=False, default=10)
     # parser.add_argument('-ml', '--max_length', dest='max_length', help='The maximun length of input sequences.', type=int, required=False, default=500)
-    parser.add_argument('-nc', '--num_classes', dest='num_classes', help='The number of classes', type=int, required=False, default=16)
-    parser.add_argument('-do', '--dropout', dest='dropout', help='The dropout value.', type=float, required=False, default=1.0)
-    parser.add_argument('-nl', '--num_layers', dest='num_layers', help='Number of layers in RNN.', type=int, required=False, default=3)
-    parser.add_argument('-b', '--batch_size', dest='batch_size', help='The size of batch.', type=int, required=False, default=1)
+    parser.add_argument('-nc', '--num_classes', dest='num_classes',
+                        help='The number of classes', type=int, required=False, default=16)
+    parser.add_argument('-do', '--dropout', dest='dropout',
+                        help='The dropout value.', type=float, required=False, default=1.0)
+    parser.add_argument('-nl', '--num_layers', dest='num_layers',
+                        help='Number of layers in RNN.', type=int, required=False, default=3)
+    parser.add_argument('-b', '--batch_size', dest='batch_size',
+                        help='The size of batch.', type=int, required=False, default=1)
 
     args = parser.parse_args()
     config_info = {
@@ -322,7 +316,6 @@ def get_config():
         'int2insn_path': args.int2insn_path
     }
     return config_info
-
 
 
 def main(feed_data_dict):
