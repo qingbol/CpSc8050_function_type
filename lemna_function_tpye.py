@@ -2,6 +2,7 @@ import os
 import sys
 #os.environ["THEANO_FLAGS"] = "device=gpu,floatX=float32"
 import numpy as np
+np.set_printoptions(threshold=sys.maxsize) 
 import cPickle as pickle
 from keras.preprocessing.sequence import pad_sequences
 from keras.models import load_model
@@ -195,6 +196,7 @@ class xai_rnn(object):
         print "shape of data_sampled", data_sampled.shape
         print "type of data_explain", type(data_explain)
         print "shape of data_explain", data_explain.shape
+        # print "data of data_explain", data_explain
 
         if option == "Fixed":
             print "Fix start points"
@@ -225,7 +227,9 @@ class xai_rnn(object):
         result = np.array(r.coef(results, np.sqrt(n*np.log(p)))[0])[:,-1]
         print "type of result: ", type(result)
         print "shape of result: ", result.shape
-        print "data of result: ", result
+        # result_round=np.around(result, decimals=1)
+        # print "data of result:{res:.2e} ".format(res=result)
+        print "data of result: ",np.array_str(result, precision=1) 
 
         importance_score_original = np.argsort(result)
         print "type of importance_score_original: ", type(importance_score_original)
@@ -416,7 +420,8 @@ if __name__ == "__main__":
                     fea = np.zeros_like(xai_test.data)
                     print "type of fea: ", type(fea)
                     print "shape of fea: ", fea.shape
-                    fea[0, xai_fea[0:25]] = xai_test.data[0, xai_fea[0:25]]
+                    fea[0, xai_fea[0:10]] = xai_test.data[0, xai_fea[0:10]]
+                    # fea[0, xai_fea[0:25]] = xai_test.data[0, xai_fea[0:25]]
                     print 'fea...',fea
                     print 'xai fea-idx row[j]...',xai_fea - idx_Row[j]
                     # print '==================================================='
