@@ -33,7 +33,7 @@ def get_config():
                         type=str, required=False, default='/Users/tarus/OnlyInMac/dataset/eklavya/clean_pickles/x64')
     # parser.add_argument('-d', '--data_folder', dest='data_folder', help='The data folder of testing dataset.', type=str, required=True)
     parser.add_argument('-f', '--split_func_path', dest='func_path', help='The path of file saving the training & testing function names.',
-                        type=str, required=False, default='/Users/tarus/TarusHome/10SrcFldr/CpSc8580EKLAVYA_py27/code/embedding/func_list/func_dict_x64_len10.lst')
+                        type=str, required=False, default='/Users/tarus/TarusHome/10SrcFldr/CpSc8580EKLAVYA_py27/code/embedding/func_list/func_dict_x64_len40_gcc.lst')
     # parser.add_argument('-f', '--split_func_path', dest='func_path', help='The path of file saving the training & testing function names.', type=str, required=True)
     parser.add_argument('-e', '--embed_path', dest='embed_path', help='The path of file saving embedding vectors.',
                         type=str, required=False, default='/Users/tarus/OnlyInMac/dataset/eklavya/embed.pkl')
@@ -54,7 +54,7 @@ def get_config():
                         help='The dimension of embedding vector.', type=int, required=False, default=256)
     # parser.add_argument('-ml', '--max_length', dest='max_length', help='The maximun length of input sequences.', type=int, required=False, default=10)
     parser.add_argument('-ml', '--max_length', dest='max_length',
-                        help='The maximun length of input sequences.', type=int, required=False, default=10)
+                        help='The maximun length of input sequences.', type=int, required=False, default=40)
     # parser.add_argument('-ml', '--max_length', dest='max_length', help='The maximun length of input sequences.', type=int, required=False, default=500)
     parser.add_argument('-nc', '--num_classes', dest='num_classes',
                         help='The number of classes', type=int, required=False, default=16)
@@ -155,10 +155,16 @@ def xai_function_type(embed_data_array, int_data_array):
 
     # ---------start(predict the label of 500 data)-----------------------------
     total_result = eval_predict.main(feed_batch_dict2)
-    label_sampled = total_result.reshape(sample_num + 1, 1)
-    print "label in total_result['pred']", type(label_sampled)
-    print "label in total_result['pred']", label_sampled.shape
     # print "label in total_result['pred']", total_result
+    label_sampled = total_result.reshape(sample_num + 1, 1)
+    print "type in total_result['pred']", type(label_sampled)
+    print "shape in total_result['pred']", label_sampled.shape
+    # print "data  in total_result['pred']", label_sampled
+    #-------convert the value in label to 1 or 0
+    # label_sampled[label_sampled != 4] = 0
+    # print "data  in total_result['pred']", label_sampled
+    # label_sampled[label_sampled == 4] = 1
+    # print "data  in total_result['pred']", label_sampled
     # --------- end (predict the label of 500 data)-----------------------------
 
     # ---------start(prepare the input data for regression model)---------------
@@ -187,48 +193,91 @@ def xai_function_type(embed_data_array, int_data_array):
 
 
 def main():
-    print "entering tst main"
     config_info = get_config()
-    data_folder = config_info['data_folder']
-    func_path = config_info['func_path']
-    embed_path = config_info['embed_path']
-    tag = config_info['tag']
-    data_tag = config_info['data_tag']
-    process_num = int(config_info['process_num'])
-    embed_dim = int(config_info['embed_dim'])
-    max_length = int(config_info['max_length'])
-    num_classes = int(config_info['num_classes'])
-    model_dir = config_info['model_dir']
-    output_dir = config_info['output_dir']
-    int2insn_path = config_info['int2insn_path']
-    batch_size = config_info['batch_size']
+    xai_func = XaiFunction(config_info)
+    xai_func.workfolow()
 
-    # ------------start(retriev the target function data)------------------------
-    result_path = os.path.join(output_dir, 'data_batch_result_.pkl')
-    if os.path.exists(result_path):
-        with open(result_path, 'r') as f:
-            data_batch = pickle.load(f)
-    else:
-        my_data = dataset.Dataset(data_folder, func_path, embed_path, process_num,
-                                  embed_dim, max_length, num_classes, tag, int2insn_path)
-        data_batch = my_data.get_batch(batch_size=batch_size)
-        with open(result_path, 'w') as f:
-            pickle.dump(data_batch, f)
-        print('Save the test result !!! ... %s' % result_path)
+class XaiFunction(object):
+    def __init__(self,config_info):
+        print "entering tst main"
+        self.data_folder = config_info['data_folder']
+        self.func_path = config_info['func_path']
+        self.embed_path = config_info['embed_path']
+        self.tag = config_info['tag']
+        data_tag = config_info['data_tag']
+        self.process_num = int(config_info['process_num'])
+        self.embed_dim = int(config_info['embed_dim'])
+        self.max_length = int(config_info['max_length'])
+        self.num_classes = int(config_info['num_classes'])
+        model_dir = config_info['model_dir']
+        self.output_dir = config_info['output_dir']
+        self.int2insn_path = config_info['int2insn_path']
+        self.batch_size = config_info['batch_size']
 
-    keep_prob = 1.0
-    feed_batch_dict1 = {
-        'data': data_batch['data'],
-        'label': data_batch['label'],
-        'length': data_batch['length'],
-        'keep_prob_pl': keep_prob
-    }
-    print "type of feed_batch_dict1['data']", type(feed_batch_dict1['data'])
-    print "len of feed_batch_dict1['data']", len(feed_batch_dict1['data'])
-    # print "data of feed_batch_dict1['data']", feed_batch_dict1['data']
-    # eval_predict.main(feed_batch_dict1)
-    # ------------ end (retriev the target function data)------------------------
+    def workfolow(self):
+        with open(self.func_path) as f:
+            func_info = pickle.load(f)
+        print "type of func_info:", type(func_info)
+        print "shape of func_info:", len(func_info)
+        # print "data of func_info", func_info
+        func_lst = func_info['train']
+        print "type of func_lst:", type(func_lst)
+        print "shape of func_lst:", len(func_lst)
+        print "data of func_lst:", func_lst
 
+        for index, func_name in enumerate(func_lst):
+            print "index in func_lst:", index
+            print "func_lst_in_loop in func_lst:", func_name
+            if index != 1 :
+                continue
+            func_lst_in_loop = []
+            func_lst_in_loop.append(func_name)
+            print "type of  in func_lst_in_loop:", type(func_lst_in_loop)
+            print "data of  in func_lst_in_loop:", func_lst_in_loop
+            data_batch = self.read_func_data(func_lst_in_loop)
+
+            embed_data_array, int_data_array = convert_insn2int(data_batch)
+            # --------------start(prepare data for lemna)--------------------------------
+            xai_function_type(embed_data_array, int_data_array)
+            # -------------- end (prepare data for lemna)--------------------------------
+        sys.exit(0)
+
+    def read_func_data(self, func_lst_in_loop):
+        # ------------start(retriev the target function data)------------------------
+        function_data_file = func_lst_in_loop[0] + ".pkl"
+        function_data_path = os.path.join(self.output_dir, function_data_file)
+        # result_path = os.path.join(self.output_dir, 'data_batch_result.pkl')
+        if os.path.exists(function_data_path):
+            with open(function_data_path, 'r') as f:
+                data_batch = pickle.load(f)
+            print('read the function data !!! ... %s' % function_data_path)
+        else:
+            my_data = dataset.Dataset(self.data_folder, func_lst_in_loop, self.embed_path, self.process_num,
+                                    self.embed_dim, self.max_length, self.num_classes, self.tag, self.int2insn_path)
+            data_batch = my_data.get_batch(batch_size = self.batch_size)
+            with open(function_data_path, 'w') as f:
+                pickle.dump(data_batch, f)
+            print('Save the function_data_path !!! ... %s' % function_data_path)
+
+        # *******start(used to predict the label of this data_batch)********
+        keep_prob = 1.0
+        feed_batch_dict1 = {
+            'data': data_batch['data'],
+            'label': data_batch['label'],
+            'length': data_batch['length'],
+            'keep_prob_pl': keep_prob
+        }
+        print "type of feed_batch_dict1['data']", type(feed_batch_dict1['data'])
+        print "len of feed_batch_dict1['data']", len(feed_batch_dict1['data'])
+        # print "data of feed_batch_dict1['data']", feed_batch_dict1['data']
+        # eval_predict.main(feed_batch_dict1)
+        # ******* end (used to predict the label of this data_batch)********
+        # ------------ end (retriev the target function data)------------------------
+        return data_batch 
+
+
+
+def convert_insn2int(data_batch):
     # ------------start(convert insn2int )---------------------------------------
     # original embedding data
     print "type of data_batch['data']", type(data_batch['data'][0])
@@ -236,7 +285,7 @@ def main():
     # print "data of data_batch['data']", data_batch['data'][0]
     embed_data_array = data_batch['data'][0]
     print "type of embed_data_array", type(embed_data_array)
-    print "data of embed_data_array", embed_data_array
+    # print "data of embed_data_array", embed_data_array
     # embed_data_array[0].fill(0)
     # print "data of embed_data_array", embed_data_array
 
@@ -261,18 +310,16 @@ def main():
     print "type of bin_data_list", type(bin_data_list)
     print "len of bin_data_list", len(bin_data_list)
     print "data of bin_data_list", bin_data_list
-    # ------------ end (convert insn2int )---------------------------------------
 
-    # --------------start(prepare data for lemna)--------------------------------
     int_data_array = np.asarray(int_data_list)
     print "type of int_data_array", type(int_data_array)
     print "shape of int_data_array", int_data_array.shape
     print "data of int_data_array", int_data_array
-    xai_function_type(embed_data_array, int_data_array)
-    # -------------- end (prepare data for lemna)--------------------------------
+    # ------------ end (convert insn2int )---------------------------------------
+    return embed_data_array, int_data_array
 
-    sys.exit(0)
 
+def useless_in_main():
     # --------------start(read data from eval result)----------------------------
     # eval.main()
 

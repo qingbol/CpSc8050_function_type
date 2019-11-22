@@ -268,7 +268,7 @@ def get_config():
                         type=str, required=False, default='/Users/tarus/OnlyInMac/dataset/eklavya/clean_pickles/x64')
     # parser.add_argument('-d', '--data_folder', dest='data_folder', help='The data folder of testing dataset.', type=str, required=True)
     parser.add_argument('-f', '--split_func_path', dest='func_path', help='The path of file saving the training & testing function names.',
-                        type=str, required=False, default='/Users/tarus/TarusHome/10SrcFldr/CpSc8580EKLAVYA_py27/code/embedding/func_list/func_dict_x64_len10.lst')
+                        type=str, required=False, default='/Users/tarus/TarusHome/10SrcFldr/CpSc8580EKLAVYA_py27/code/embedding/func_list/func_dict_x64_len40_gcc.lst')
     # parser.add_argument('-f', '--split_func_path', dest='func_path', help='The path of file saving the training & testing function names.', type=str, required=True)
     parser.add_argument('-e', '--embed_path', dest='embed_path', help='The path of file saving embedding vectors.',
                         type=str, required=False, default='/Users/tarus/OnlyInMac/dataset/eklavya/embed.pkl')
@@ -289,7 +289,7 @@ def get_config():
                         help='The dimension of embedding vector.', type=int, required=False, default=256)
     # parser.add_argument('-ml', '--max_length', dest='max_length', help='The maximun length of input sequences.', type=int, required=False, default=10)
     parser.add_argument('-ml', '--max_length', dest='max_length',
-                        help='The maximun length of input sequences.', type=int, required=False, default=10)
+                        help='The maximun length of input sequences.', type=int, required=False, default=40)
     # parser.add_argument('-ml', '--max_length', dest='max_length', help='The maximun length of input sequences.', type=int, required=False, default=500)
     parser.add_argument('-nc', '--num_classes', dest='num_classes',
                         help='The number of classes', type=int, required=False, default=16)
