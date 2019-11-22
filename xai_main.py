@@ -1,7 +1,6 @@
 '''
-for test the converter
+script for explain argument nums of function type 
 '''
-
 from rpy2 import robjects
 from rpy2.robjects.packages import importr
 import rpy2.robjects.numpy2ri
@@ -10,7 +9,6 @@ import sys
 import dataset
 import converter
 import eval_predict
-import eval
 import argparse
 import cPickle as pickle
 import numpy as np
@@ -86,110 +84,6 @@ def get_config():
     return config_info
 
 
-def xai_function_type(embed_data_array, int_data_array):
-    sample_num = 500
-    tl = embed_data_array.shape[0]
-    print "tl of embed_data_array.shape[0]", embed_data_array.shape[0]
-    tc = embed_data_array.shape[1]
-    print "tc of embed_data_array.shape[1]", embed_data_array.shape[1]
-    half_tl = tl/2
-    sample = np.random.randint(1, tl+1, sample_num)
-    # print "sample len", len(sample)
-    # print "sample shape: ", sample.shape
-    # print "type of smaple", type(sample)
-
-    features_range = range(tl)
-    # features_range = range(tl+1)
-    # print "feature_range type: ", type(features_range)
-    # print "feature_range len", len(features_range)
-    # print "feature_range data: ", features_range
-
-    data_embed = np.copy(embed_data_array).reshape(1, tl, tc)
-    data_int = np.copy(int_data_array).reshape(1, tl)
-    print "data of int_data_array", int_data_array
-    print "data of data_int", data_int
-    for i, size in enumerate(sample, start=1):
-        inactive = np.random.choice(features_range, size, replace=False)
-        # print "type of inactive", type(inactive)
-        # print 'inactive --->', inactive
-        tmp_embed = np.copy(embed_data_array)
-        tmp_embed[inactive] = 0
-        tmp_embed = tmp_embed.reshape(1, tl, tc)
-        data_embed = np.concatenate((data_embed, tmp_embed), axis=0)
-
-        tmp_int = np.copy(int_data_array)
-        tmp_int[inactive] = 0
-        tmp_int = tmp_int.reshape(1, tl)
-        data_int = np.concatenate((data_int, tmp_int), axis=0)
-        # print "type of data_embed", type(data_embed)
-        # print "shape of data_embed", data_embed.shape
-    # print "type of data_embed", type(data_embed)
-    # print "shape of data_embed", data_embed.shape
-    print "type of tmp_int", type(data_int)
-    print "shape of tmp_int", data_int.shape
-
-    # ---------start(prepare the dict which feed to eval)------------------------
-    data_length = np.empty(sample_num + 1)
-    data_length.fill(tl)
-    # print "type of data_length", type(data_length)
-    # print "len of data_length", len(data_length)
-    # print "shape of data_length", data_length.shape
-    # print "data of data_length", data_length
-    data_label = np.empty([sample_num + 1, 16])
-    data_label.fill(0)
-    # print "type of data_label", type(data_label)
-    # print "len of data_label", len(data_label)
-    # print "shape of data_label", data_label.shape
-    # print "data of data_label", data_label
-    keep_prob = 1.0
-    feed_batch_dict2 = {
-        'data': data_embed,
-        'label': data_label,
-        'length': data_length,
-        'keep_prob_pl': np.asarray(keep_prob, dtype=np.float32)
-    }
-    # print "type of feed_dict2[data_pl]", type(feed_batch_dict2['data'][0])
-    # print "len of feed_dict2[data_pl]", len(feed_batch_dict2['data'][0])
-    # print "data of feed_dict2[data_pl]", feed_batch_dict2['data'][0]
-    # --------- end (prepare the dict which feed to eval)------------------------
-
-    # ---------start(predict the label of 500 data)-----------------------------
-    total_result = eval_predict.main(feed_batch_dict2)
-    # print "label in total_result['pred']", total_result
-    label_sampled = total_result.reshape(sample_num + 1, 1)
-    print "type in total_result['pred']", type(label_sampled)
-    print "shape in total_result['pred']", label_sampled.shape
-    # print "data  in total_result['pred']", label_sampled
-    #-------convert the value in label to 1 or 0
-    # label_sampled[label_sampled != 4] = 0
-    # print "data  in total_result['pred']", label_sampled
-    # label_sampled[label_sampled == 4] = 1
-    # print "data  in total_result['pred']", label_sampled
-    # --------- end (predict the label of 500 data)-----------------------------
-
-    # ---------start(prepare the input data for regression model)---------------
-    X = r.matrix(data_embed, nrow = data_embed.shape[0], ncol = data_embed.shape[1])
-    # X = r.matrix(data_int, nrow = data_int.shape[0], ncol = data_int.shape[1])
-    print "type of X", type(X)
-    # print "X data: ", X
-    Y = r.matrix(label_sampled, nrow = label_sampled.shape[0], ncol = label_sampled.shape[1])
-    print "type of Y", type(Y)
-    # print "Y data: ", Y
-
-    n = r.nrow(X)
-    p = r.ncol(X)
-    results = r.fusedlasso1d(y=Y,X=X)
-    print "type of results: {}|row: {}|col: {}".format(type(results),r.nrow(results),r.ncol(results))
-    result_original = np.array(r.coef(results, np.sqrt(n*np.log(p)))[0])
-    print "type of result_original: ", type(result_original)
-    print "shape of result_original: ", result_original.shape
-    result = np.array(r.coef(results, np.sqrt(n*np.log(p)))[0])[:,-1]
-    print "type of result: ", type(result)
-    print "shape of result: ", result.shape
-    # result_round=np.around(result, decimals=1)
-    # print "data of result:{res:.2e} ".format(res=result)
-    print "data of result: ",np.array_str(result, precision=2)
-    # --------- end (prepare the input data for regression model)---------------
 
 
 def main():
@@ -200,6 +94,7 @@ def main():
 class XaiFunction(object):
     def __init__(self,config_info):
         print "entering tst main"
+        self.config_info = config_info
         self.data_folder = config_info['data_folder']
         self.func_path = config_info['func_path']
         self.embed_path = config_info['embed_path']
@@ -226,8 +121,9 @@ class XaiFunction(object):
         print "data of func_lst:", func_lst
 
         for index, func_name in enumerate(func_lst):
+            self.func_name = func_name
             print "index in func_lst:", index
-            print "func_lst_in_loop in func_lst:", func_name
+            print "func_name in func_lst:", self.func_name
             if index != 1 :
                 continue
             func_lst_in_loop = []
@@ -238,13 +134,13 @@ class XaiFunction(object):
 
             embed_data_array, int_data_array = convert_insn2int(data_batch)
             # --------------start(prepare data for lemna)--------------------------------
-            xai_function_type(embed_data_array, int_data_array)
+            self.xai_function_type(embed_data_array, int_data_array)
             # -------------- end (prepare data for lemna)--------------------------------
         sys.exit(0)
 
     def read_func_data(self, func_lst_in_loop):
         # ------------start(retriev the target function data)------------------------
-        function_data_file = func_lst_in_loop[0] + ".pkl"
+        function_data_file = func_lst_in_loop[0] + ".dat"
         function_data_path = os.path.join(self.output_dir, function_data_file)
         # result_path = os.path.join(self.output_dir, 'data_batch_result.pkl')
         if os.path.exists(function_data_path):
@@ -276,6 +172,111 @@ class XaiFunction(object):
         return data_batch 
 
 
+    def xai_function_type(self, embed_data_array, int_data_array):
+        sample_num = 500
+        tl = embed_data_array.shape[0]
+        print "tl of embed_data_array.shape[0]", embed_data_array.shape[0]
+        tc = embed_data_array.shape[1]
+        print "tc of embed_data_array.shape[1]", embed_data_array.shape[1]
+        half_tl = tl/2
+        sample = np.random.randint(1, tl+1, sample_num)
+        # print "sample len", len(sample)
+        # print "sample shape: ", sample.shape
+        # print "type of smaple", type(sample)
+
+        features_range = range(tl)
+        # features_range = range(tl+1)
+        # print "feature_range type: ", type(features_range)
+        # print "feature_range len", len(features_range)
+        # print "feature_range data: ", features_range
+
+        data_embed = np.copy(embed_data_array).reshape(1, tl, tc)
+        data_int = np.copy(int_data_array).reshape(1, tl)
+        print "data of int_data_array", int_data_array
+        print "data of data_int", data_int
+        for i, size in enumerate(sample, start=1):
+            inactive = np.random.choice(features_range, size, replace=False)
+            # print "type of inactive", type(inactive)
+            # print 'inactive --->', inactive
+            tmp_embed = np.copy(embed_data_array)
+            tmp_embed[inactive] = 0
+            tmp_embed = tmp_embed.reshape(1, tl, tc)
+            data_embed = np.concatenate((data_embed, tmp_embed), axis=0)
+
+            tmp_int = np.copy(int_data_array)
+            tmp_int[inactive] = 0
+            tmp_int = tmp_int.reshape(1, tl)
+            data_int = np.concatenate((data_int, tmp_int), axis=0)
+            # print "type of data_embed", type(data_embed)
+            # print "shape of data_embed", data_embed.shape
+        # print "type of data_embed", type(data_embed)
+        # print "shape of data_embed", data_embed.shape
+        print "type of tmp_int", type(data_int)
+        print "shape of tmp_int", data_int.shape
+
+        # ---------start(prepare the dict which feed to eval)------------------------
+        data_length = np.empty(sample_num + 1)
+        data_length.fill(tl)
+        # print "type of data_length", type(data_length)
+        # print "len of data_length", len(data_length)
+        # print "shape of data_length", data_length.shape
+        # print "data of data_length", data_length
+        data_label = np.empty([sample_num + 1, 16])
+        data_label.fill(0)
+        # print "type of data_label", type(data_label)
+        # print "len of data_label", len(data_label)
+        # print "shape of data_label", data_label.shape
+        # print "data of data_label", data_label
+        keep_prob = 1.0
+        feed_batch_dict2 = {
+            'data': data_embed,
+            'label': data_label,
+            'length': data_length,
+            'keep_prob_pl': np.asarray(keep_prob, dtype=np.float32)
+        }
+        # print "type of feed_dict2[data_pl]", type(feed_batch_dict2['data'][0])
+        # print "len of feed_dict2[data_pl]", len(feed_batch_dict2['data'][0])
+        # print "data of feed_dict2[data_pl]", feed_batch_dict2['data'][0]
+        # --------- end (prepare the dict which feed to eval)------------------------
+
+        # ---------start(predict the label of 500 data)-----------------------------
+        print "func_name in func_lst:", self.func_name
+        total_result = eval_predict.predict_main(feed_batch_dict2, self.config_info, self.func_name)
+        # print "label in total_result['pred']", total_result
+        label_sampled = total_result.reshape(sample_num + 1, 1)
+        print "type in total_result['pred']", type(label_sampled)
+        print "shape in total_result['pred']", label_sampled.shape
+        # print "data  in total_result['pred']", label_sampled
+        #-------convert the value in label to 1 or 0
+        # label_sampled[label_sampled != 4] = 0
+        # print "data  in total_result['pred']", label_sampled
+        # label_sampled[label_sampled == 4] = 1
+        # print "data  in total_result['pred']", label_sampled
+        # --------- end (predict the label of 500 data)-----------------------------
+
+        # ---------start(prepare the input data for regression model)---------------
+        X = r.matrix(data_embed, nrow = data_embed.shape[0], ncol = data_embed.shape[1])
+        # X = r.matrix(data_int, nrow = data_int.shape[0], ncol = data_int.shape[1])
+        print "type of X", type(X)
+        # print "X data: ", X
+        Y = r.matrix(label_sampled, nrow = label_sampled.shape[0], ncol = label_sampled.shape[1])
+        print "type of Y", type(Y)
+        # print "Y data: ", Y
+
+        n = r.nrow(X)
+        p = r.ncol(X)
+        results = r.fusedlasso1d(y=Y,X=X)
+        print "type of results: {}|row: {}|col: {}".format(type(results),r.nrow(results),r.ncol(results))
+        result_original = np.array(r.coef(results, np.sqrt(n*np.log(p)))[0])
+        print "type of result_original: ", type(result_original)
+        print "shape of result_original: ", result_original.shape
+        result = np.array(r.coef(results, np.sqrt(n*np.log(p)))[0])[:,-1]
+        print "type of result: ", type(result)
+        print "shape of result: ", result.shape
+        # result_round=np.around(result, decimals=1)
+        # print "data of result:{res:.2e} ".format(res=result)
+        print "data of result: ",np.array_str(result, precision=2)
+        # --------- end (prepare the input data for regression model)---------------
 
 def convert_insn2int(data_batch):
     # ------------start(convert insn2int )---------------------------------------
@@ -319,7 +320,7 @@ def convert_insn2int(data_batch):
     return embed_data_array, int_data_array
 
 
-def useless_in_main():
+def prepare_data_deprecated():
     # --------------start(read data from eval result)----------------------------
     # eval.main()
 
