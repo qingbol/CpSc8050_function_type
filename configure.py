@@ -1,10 +1,11 @@
 
+import sys
 import argparse
 
 
 def get_config(options):
-    parser = argparse.ArgumentParser()
     print "options: ", options
+    parser = argparse.ArgumentParser()
     parser.add_argument('-idx', '--index_of_function', dest='func_index',
                         help='the index of function to be test', type=int, required=False, default=0)
     parser.add_argument('-sn', '--sample_num', dest='sample_num',

@@ -53,6 +53,9 @@ class XaiFunction(object):
         print "shape of func_lst: ", len(func_lst)
         # print "data of func_lst:", func_lst
 
+        # cal the match(prediction/label) number
+        match_num_true = 0
+        match_num_false = 0
         for index, func_name in enumerate(func_lst):
             self.func_name = func_name
             print "---------start of new function: %d------------------------------" % index
@@ -82,8 +85,14 @@ class XaiFunction(object):
             # print "data of predicted_result", predicted_result[0]
             self.predicted_arg_num = predicted_result[0]
             if self.predicted_arg_num != self.real_arg_num:
+                print "data of real_arg_num of 1: ", self.real_arg_num
+                print "data of predicted_arg_num of 1: ", self.predicted_arg_num
                 print "Error: predicted_arg_num don't match real_arg_num"
+                match_num_false += 1
                 continue
+            else:
+                match_num_true += 1
+                pass
             # -------------- end (check the correctness of prediction)----------
 
             # --------------start(explain the prediction)-----------------------
@@ -92,6 +101,8 @@ class XaiFunction(object):
             # -------------- end (explain the prediction)-----------------------
 
             print "--------- end of new function: %d------------------------------" % index
+        print "match_num_false: ", match_num_false
+        print "match_num_true: ", match_num_true
         sys.exit(0)
 
     def read_func_data(self, func_lst_in_loop):
