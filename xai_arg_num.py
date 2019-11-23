@@ -55,7 +55,7 @@ class XaiFunction(object):
             print "---------start of new function------------------------------"
             print "index in func_lst:", index
             print "func_name in func_lst:", self.func_name
-            if index != 0 :
+            if index != 2 :
                 continue
             func_lst_in_loop = []
             func_lst_in_loop.append(func_name)
@@ -67,9 +67,9 @@ class XaiFunction(object):
             print "data of  in data_batch['label']:", data_batch['label']
             print "************label of {}**********".format(self.func_name)
 
-            embed_data_array, int_data_array = convert_insn2int(data_batch)
+            embed_data_array, int_data_array, hex_data_array = convert_insn2int(data_batch)
             # --------------start(prepare data for lemna)--------------------------------
-            self.xai_function_type(embed_data_array, int_data_array)
+            self.xai_function_type(embed_data_array, int_data_array, hex_data_array)
             # -------------- end (prepare data for lemna)--------------------------------
             print "--------- end of new function------------------------------"
         sys.exit(0)
@@ -108,7 +108,7 @@ class XaiFunction(object):
         return data_batch 
 
 
-    def xai_function_type(self, embed_data_array, int_data_array):
+    def xai_function_type(self, embed_data_array, int_data_array, hex_data_array):
         sample_num = 500
         tl = embed_data_array.shape[0]
         print "tl of embed_data_array.shape[0]", embed_data_array.shape[0]
@@ -215,6 +215,14 @@ class XaiFunction(object):
         # result_round=np.around(result, decimals=1)
         # print "data of result:{res:.2e} ".format(res=result)
         print "data of result: ",np.array_str(result, precision=2)
+        significant_index = np.argsort(result)[::-1]
+        print "data of significant_index: ", significant_index
+        fea = np.zeros_like(hex_data_array) 
+        print "shape of fea", fea.shape
+        # print "data of hex_data_array", hex_data_array
+        fea[significant_index[0:7]] = hex_data_array[significant_index[0:7]]
+        print "data of feature", fea.tolist()
+        
         # --------- end (prepare the input data for regression model)---------------
 
 def convert_insn2int(data_batch):
@@ -236,27 +244,31 @@ def convert_insn2int(data_batch):
     hex_data_list = data_batch['inst_bytes'][0]
     print "type of hex_data_list", type(hex_data_list)
     # print "data of hex_data_list", hex_data_list
+    hex_data_array = np.asarray(hex_data_list)
+    # hex_data_array = np.array(hex_data_list)
+    # hex_data_array = np.array([np.array(x) for x in hex_data_list])
+    # print "data of hex_data_array", hex_data_array
 
     # int of hex data
     int2insn_map, int_data_list = converter.main(hex_data_list)
-    print "type of int_data_list", type(int_data_list)
-    print "int data of int_data_list", int_data_list
-    print "type of int2insn_map", type(int2insn_map)
-    print "data of int2insn_map", int2insn_map
+    print "type of int_data_list:", type(int_data_list)
+    print "int data of int_data_list:", int_data_list
+    print "type of int2insn_map:", type(int2insn_map)
+    print "data of int2insn_map:", int2insn_map
+    int_data_array = np.asarray(int_data_list)
+    print "type of int_data_array:", type(int_data_array)
+    print "shape of int_data_array:", int_data_array.shape
+    # print "data of int_data_array", int_data_array
 
-    bin_data_list = [int2insn_map[k]
-                     for k in int_data_list if k in int2insn_map]
+    # bin_data_list = [int2insn_map[k]
+    #                  for k in int_data_list if k in int2insn_map]
     # bin_data_list = [int2insn_map[int(k)] for k in int_data_list if int(k) in int2insn_map]
-    print "type of bin_data_list", type(bin_data_list)
-    print "len of bin_data_list", len(bin_data_list)
+    # print "type of bin_data_list", type(bin_data_list)
+    # print "len of bin_data_list", len(bin_data_list)
     # print "data of bin_data_list", bin_data_list
 
-    int_data_array = np.asarray(int_data_list)
-    print "type of int_data_array", type(int_data_array)
-    print "shape of int_data_array", int_data_array.shape
-    # print "data of int_data_array", int_data_array
     # ------------ end (convert insn2int )---------------------------------------
-    return embed_data_array, int_data_array
+    return embed_data_array, int_data_array, hex_data_array
 
 
 def get_config():

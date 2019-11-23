@@ -1,4 +1,4 @@
-# CpSc8580_function_type
+# CpSc8580_explain_result_of_function_type
 
 ## Introduction:
 
@@ -55,32 +55,26 @@ https://drive.google.com/drive/folders/1oiSp5Ak1Lg6Dyg6WIJylIkW9dgmpJLBE?usp=sha
 
 In xai_arg_num.py, modify the parameter in these two below statements.
 
-<pre><code>
-parser.add_argument('-f', '--split_func_path', dest='func_path', help='The path of file saving the training & testing function names.',type=str, required=False, default='/path_to_your_function_list/func_dict_xxx.lst')
+<pre><code>parser.add_argument('-f', '--split_func_path', dest='func_path', help='The path of file saving the training & testing function names.',type=str, required=False, default='/path_to_your_function_list/func_dict_xxx.lst')
 
-parser.add_argument('-ml', '--max_length', dest='max_length', help='The maximun length of input sequences.', type=int, required=False, default=40)
-</code></pre>
+parser.add_argument('-ml', '--max_length', dest='max_length', help='The maximun length of input sequences.', type=int, required=False, default=40)</code></pre>
 
 ### Set the specific function you want to explain
 
 In xai_arg_num.py, modify the parameter in this statement.
 
-<pre><code>
-for index, func_name in enumerate(func_lst):
+<pre><code>for index, func_name in enumerate(func_lst):
     self.func_name = func_name
     if index != 1 :
-        continue
-</code></pre>
+        continue</code></pre>
 
 ### Run the entry function.
 
-<pre><code>
- python xai_arg_num.py
-</code></pre>
+<pre><code> python xai_arg_num.py</code></pre>
 
 ## The workflow in entry function
 
-Take function humidity_str in gcc-64-O1-sg3utils-sg_logs.pkl as example, which
+Take function humidity_str in gcc-64-O1-sg3utils-sg_logs.pkl for example, which
 contains 40 instructions.
 The workflow in this entry function can be summarized as folllow:
 
@@ -92,7 +86,7 @@ The binary format of this function:
 
 The embedding value of this function:
 
-> [[ 4.9242502e-01 -6.3213439e+00 -2.1821052e-01 ... 5.3236794e-01 -4.7061494e-01 7.2240531e-02] <br /> [-1.4824426e-01 7.6710269e-02 2.1449502e-03 ... -9.8106312e-03 -1.5178236e-01 -4.9693279e-02]<br /> > [-1.4415282e-01 6.8571813e-02 -8.1709184e-04 ... 2.6113811e-04 -1.5341897e-01 -4.9748953e-02] <br />
+> [[ 4.9242502e-01 -6.3213439e+00 -2.1821052e-01 ... 5.3236794e-01 -4.7061494e-01 7.2240531e-02] <br /> [-1.4824426e-01 7.6710269e-02 2.1449502e-03 ... -9.8106312e-03 -1.5178236e-01 -4.9693279e-02]<br /> [-1.4415282e-01 6.8571813e-02 -8.1709184e-04 ... 2.6113811e-04 -1.5341897e-01 -4.9748953e-02] <br />
 > ...<br /> [ 1.7497748e+00 -1.2347011e-01 -1.6310322e+00 ... -1.3755658e+00 -1.6481979e-01 -1.5915378e+00]<br /> [ 7.6243961e-01 -2.6772411e+00 1.3527184e+00 ... 9.2628604e-01 -1.7080919e-01 1.4312527e+00] <br /> [ 5.9697060e-03 -4.4744587e-01 5.3603011e-01 ... -1.8529317e-01 1.2032903e+00 2.1198967e+00]]]
 
 The label of this function:
@@ -120,3 +114,7 @@ to a regression model which can give the most significant instructions to
 determin the argument number in this function. The coefficients array is as below:
 
 > [-0.33 -0.33 -0.33 1.62 1.62 1.62 1.62 1.62 1.62 1.62 1.27 0.32 0.32 0.32 0.32 0.32 0.32 0.32 0.32 0.32 0.32 0.32 0.32 0.32 0.32 0.32 0.32 0.32 0.32 0.32 0.32 0.12 0.12 0.12 -1.05 -1.05 -1.05 -1.05 -1.05 -1.05]
+
+If we select the 7 most important instructions, the result would be as below:
+
+> [0, 0, 0, [85], [83], [72, 99, 239], [72, 141, 117, 5], [73, 137, 204], [72, 99, 218], [72, 131, 236, 8], 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
