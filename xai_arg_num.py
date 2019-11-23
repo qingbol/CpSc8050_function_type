@@ -21,76 +21,6 @@ rpy2.robjects.numpy2ri.activate()
 importr('genlasso')
 # importr('gsubfn')
 
-
-def get_config():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-i', '--int2insn_map_path', dest='int2insn_path', help='The pickle file saving int -> instruction mapping.',
-                        type=str, required=False, default='/Users/tarus/TarusHome/10SrcFldr/CpSc8580EKLAVYA_py27/code/embedding/int2insn.map')
-    # parser.add_argument('-i', '--int2insn_map_path', dest='int2insn_path', help='The pickle file saving int -> instruction mapping.', type=str, required=True)
-    parser.add_argument('-d', '--data_folder', dest='data_folder', help='The data folder of testing dataset.',
-                        type=str, required=False, default='/Users/tarus/OnlyInMac/dataset/eklavya/clean_pickles/x64')
-    # parser.add_argument('-d', '--data_folder', dest='data_folder', help='The data folder of testing dataset.', type=str, required=True)
-    parser.add_argument('-f', '--split_func_path', dest='func_path', help='The path of file saving the training & testing function names.',
-                        type=str, required=False, default='/Users/tarus/TarusHome/10SrcFldr/CpSc8580EKLAVYA_py27/code/embedding/func_list/func_dict_x64_len40_gcc.lst')
-    # parser.add_argument('-f', '--split_func_path', dest='func_path', help='The path of file saving the training & testing function names.', type=str, required=True)
-    parser.add_argument('-e', '--embed_path', dest='embed_path', help='The path of file saving embedding vectors.',
-                        type=str, required=False, default='/Users/tarus/OnlyInMac/dataset/eklavya/embed.pkl')
-    # parser.add_argument('-e', '--embed_path', dest='embed_path', help='The path of file saving embedding vectors.', type=str, required=True)
-    parser.add_argument('-o', '--output_dir', dest='output_dir',
-                        help='The directory to saved the evaluation result.', type=str, required=False, default='eval_output')
-    # parser.add_argument('-o', '--output_dir', dest='output_dir', help='The directory to saved the evaluation result.', type=str, required=True)
-    parser.add_argument('-m', '--model_dir', dest='model_dir', help='The directory saved the models.',
-                        type=str, required=False, default='/Users/tarus/OnlyInMac/dataset/eklavya/rnn_output/model')
-    # parser.add_argument('-m', '--model_dir', dest='model_dir', help='The directory saved the models.', type=str, required=True)
-    parser.add_argument('-t', '--label_tag', dest='tag',
-                        help='The type of labels. Possible value: num_args, type#0, type#1, ...', type=str, required=False, default='num_args')
-    parser.add_argument('-dt', '--data_tag', dest='data_tag', help='The type of input data.',
-                        type=str, required=False, choices=['caller', 'callee'], default='callee')
-    parser.add_argument('-pn', '--process_num', dest='process_num',
-                        help='Number of processes.', type=int, required=False, default=4)
-    parser.add_argument('-ed', '--embedding_dim', dest='embed_dim',
-                        help='The dimension of embedding vector.', type=int, required=False, default=256)
-    # parser.add_argument('-ml', '--max_length', dest='max_length', help='The maximun length of input sequences.', type=int, required=False, default=10)
-    parser.add_argument('-ml', '--max_length', dest='max_length',
-                        help='The maximun length of input sequences.', type=int, required=False, default=40)
-    # parser.add_argument('-ml', '--max_length', dest='max_length', help='The maximun length of input sequences.', type=int, required=False, default=500)
-    parser.add_argument('-nc', '--num_classes', dest='num_classes',
-                        help='The number of classes', type=int, required=False, default=16)
-    parser.add_argument('-do', '--dropout', dest='dropout',
-                        help='The dropout value.', type=float, required=False, default=1.0)
-    parser.add_argument('-nl', '--num_layers', dest='num_layers',
-                        help='Number of layers in RNN.', type=int, required=False, default=3)
-    parser.add_argument('-b', '--batch_size', dest='batch_size',
-                        help='The size of batch.', type=int, required=False, default=1)
-
-    args = parser.parse_args()
-    config_info = {
-        'data_folder': args.data_folder,
-        'func_path': args.func_path,
-        'embed_path': args.embed_path,
-        'tag': args.tag,
-        'data_tag': args.data_tag,
-        'process_num': args.process_num,
-        'embed_dim': args.embed_dim,
-        'max_length': args.max_length,
-        'num_classes': args.num_classes,
-        'output_dir': args.output_dir,
-        'model_dir': args.model_dir,
-        'dropout': args.dropout,
-        'num_layers': args.num_layers,
-        'batch_size': args.batch_size,
-        'int2insn_path': args.int2insn_path
-    }
-    return config_info
-
-
-
-
-def main():
-    config_info = get_config()
-    xai_func = XaiFunction(config_info)
-    xai_func.workfolow()
-
 class XaiFunction(object):
     def __init__(self,config_info):
         print "entering tst main"
@@ -122,20 +52,26 @@ class XaiFunction(object):
 
         for index, func_name in enumerate(func_lst):
             self.func_name = func_name
+            print "---------start of new function------------------------------"
             print "index in func_lst:", index
             print "func_name in func_lst:", self.func_name
-            if index != 1 :
+            if index != 0 :
                 continue
             func_lst_in_loop = []
             func_lst_in_loop.append(func_name)
             print "type of  in func_lst_in_loop:", type(func_lst_in_loop)
             print "data of  in func_lst_in_loop:", func_lst_in_loop
             data_batch = self.read_func_data(func_lst_in_loop)
+            print "************label of {}**********".format(self.func_name)
+            print "type of  in data_batch['label']:", type(data_batch['label'])
+            print "data of  in data_batch['label']:", data_batch['label']
+            print "************label of {}**********".format(self.func_name)
 
             embed_data_array, int_data_array = convert_insn2int(data_batch)
             # --------------start(prepare data for lemna)--------------------------------
             self.xai_function_type(embed_data_array, int_data_array)
             # -------------- end (prepare data for lemna)--------------------------------
+            print "--------- end of new function------------------------------"
         sys.exit(0)
 
     def read_func_data(self, func_lst_in_loop):
@@ -156,15 +92,15 @@ class XaiFunction(object):
             print('Save the function_data_path !!! ... %s' % function_data_path)
 
         # *******start(used to predict the label of this data_batch)********
-        keep_prob = 1.0
-        feed_batch_dict1 = {
-            'data': data_batch['data'],
-            'label': data_batch['label'],
-            'length': data_batch['length'],
-            'keep_prob_pl': keep_prob
-        }
-        print "type of feed_batch_dict1['data']", type(feed_batch_dict1['data'])
-        print "len of feed_batch_dict1['data']", len(feed_batch_dict1['data'])
+        # keep_prob = 1.0
+        # feed_batch_dict1 = {
+        #     'data': data_batch['data'],
+        #     'label': data_batch['label'],
+        #     'length': data_batch['length'],
+        #     'keep_prob_pl': keep_prob
+        # }
+        # print "type of feed_batch_dict1['data']", type(feed_batch_dict1['data'])
+        # print "len of feed_batch_dict1['data']", len(feed_batch_dict1['data'])
         # print "data of feed_batch_dict1['data']", feed_batch_dict1['data']
         # eval_predict.main(feed_batch_dict1)
         # ******* end (used to predict the label of this data_batch)********
@@ -192,8 +128,8 @@ class XaiFunction(object):
 
         data_embed = np.copy(embed_data_array).reshape(1, tl, tc)
         data_int = np.copy(int_data_array).reshape(1, tl)
-        print "data of int_data_array", int_data_array
-        print "data of data_int", data_int
+        # print "data of int_data_array", int_data_array
+        # print "data of data_int", data_int
         for i, size in enumerate(sample, start=1):
             inactive = np.random.choice(features_range, size, replace=False)
             # print "type of inactive", type(inactive)
@@ -242,11 +178,14 @@ class XaiFunction(object):
         # ---------start(predict the label of 500 data)-----------------------------
         print "func_name in func_lst:", self.func_name
         total_result = eval_predict.predict_main(feed_batch_dict2, self.config_info, self.func_name)
-        # print "label in total_result['pred']", total_result
+        print "type in total_result['pred']", type(total_result)
+        print "shape in total_result['pred']", total_result.shape
+        print "label in total_result['pred']", total_result
         label_sampled = total_result.reshape(sample_num + 1, 1)
-        print "type in total_result['pred']", type(label_sampled)
-        print "shape in total_result['pred']", label_sampled.shape
-        # print "data  in total_result['pred']", label_sampled
+        # print "type in label_sampled: ", type(label_sampled)
+        # print "shape in label_sampled: ", label_sampled.shape
+        # print "data  in label_sampled:", label_sampled
+
         #-------convert the value in label to 1 or 0
         # label_sampled[label_sampled != 4] = 0
         # print "data  in total_result['pred']", label_sampled
@@ -296,7 +235,7 @@ def convert_insn2int(data_batch):
     print "data of data_batch['inst_types']", data_batch['inst_bytes'][0]
     hex_data_list = data_batch['inst_bytes'][0]
     print "type of hex_data_list", type(hex_data_list)
-    print "data of hex_data_list", hex_data_list
+    # print "data of hex_data_list", hex_data_list
 
     # int of hex data
     int2insn_map, int_data_list = converter.main(hex_data_list)
@@ -310,14 +249,87 @@ def convert_insn2int(data_batch):
     # bin_data_list = [int2insn_map[int(k)] for k in int_data_list if int(k) in int2insn_map]
     print "type of bin_data_list", type(bin_data_list)
     print "len of bin_data_list", len(bin_data_list)
-    print "data of bin_data_list", bin_data_list
+    # print "data of bin_data_list", bin_data_list
 
     int_data_array = np.asarray(int_data_list)
     print "type of int_data_array", type(int_data_array)
     print "shape of int_data_array", int_data_array.shape
-    print "data of int_data_array", int_data_array
+    # print "data of int_data_array", int_data_array
     # ------------ end (convert insn2int )---------------------------------------
     return embed_data_array, int_data_array
+
+
+def get_config():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-ml', '--max_length', dest='max_length',
+                        help='The maximun length of input sequences.', type=int, required=False, default=40)
+    # parser.add_argument('-ml', '--max_length', dest='max_length', help='The maximun length of input sequences.', type=int, required=False, default=500)
+    parser.add_argument('-i', '--int2insn_map_path', dest='int2insn_path', help='The pickle file saving int -> instruction mapping.',
+                        type=str, required=False, default='/Users/tarus/TarusHome/10SrcFldr/CpSc8580EKLAVYA_py27/code/embedding/int2insn.map')
+    # parser.add_argument('-i', '--int2insn_map_path', dest='int2insn_path', help='The pickle file saving int -> instruction mapping.', type=str, required=True)
+    parser.add_argument('-d', '--data_folder', dest='data_folder', help='The data folder of testing dataset.',
+                        type=str, required=False, default='/Users/tarus/OnlyInMac/dataset/eklavya/clean_pickles/x64')
+    # parser.add_argument('-d', '--data_folder', dest='data_folder', help='The data folder of testing dataset.', type=str, required=True)
+    parser.add_argument('-f', '--split_func_path', dest='func_path', help='The path of file saving the training & testing function names.',
+                        type=str, required=False, default='/Users/tarus/TarusHome/10SrcFldr/CpSc8580EKLAVYA_py27/code/embedding/func_list/func_dict_x64_len40_gcc.lst')
+    # parser.add_argument('-f', '--split_func_path', dest='func_path', help='The path of file saving the training & testing function names.', type=str, required=True)
+    parser.add_argument('-e', '--embed_path', dest='embed_path', help='The path of file saving embedding vectors.',
+                        type=str, required=False, default='/Users/tarus/OnlyInMac/dataset/eklavya/embed.pkl')
+    # parser.add_argument('-e', '--embed_path', dest='embed_path', help='The path of file saving embedding vectors.', type=str, required=True)
+    parser.add_argument('-m', '--model_dir', dest='model_dir', help='The directory saved the models.',
+                        type=str, required=False, default='/Users/tarus/OnlyInMac/dataset/eklavya/rnn_output/model')
+    # parser.add_argument('-m', '--model_dir', dest='model_dir', help='The directory saved the models.', type=str, required=True)
+
+    parser.add_argument('-o', '--output_dir', dest='output_dir',
+                        help='The directory to saved the evaluation result.', type=str, required=False, default='eval_output')
+    # parser.add_argument('-o', '--output_dir', dest='output_dir', help='The directory to saved the evaluation result.', type=str, required=True)
+    parser.add_argument('-t', '--label_tag', dest='tag',
+                        help='The type of labels. Possible value: num_args, type#0, type#1, ...', type=str, required=False, default='num_args')
+    parser.add_argument('-dt', '--data_tag', dest='data_tag', help='The type of input data.',
+                        type=str, required=False, choices=['caller', 'callee'], default='callee')
+    parser.add_argument('-pn', '--process_num', dest='process_num',
+                        help='Number of processes.', type=int, required=False, default=4)
+    parser.add_argument('-ed', '--embedding_dim', dest='embed_dim',
+                        help='The dimension of embedding vector.', type=int, required=False, default=256)
+    # parser.add_argument('-ml', '--max_length', dest='max_length', help='The maximun length of input sequences.', type=int, required=False, default=10)
+    parser.add_argument('-nc', '--num_classes', dest='num_classes',
+                        help='The number of classes', type=int, required=False, default=16)
+    parser.add_argument('-do', '--dropout', dest='dropout',
+                        help='The dropout value.', type=float, required=False, default=1.0)
+    parser.add_argument('-nl', '--num_layers', dest='num_layers',
+                        help='Number of layers in RNN.', type=int, required=False, default=3)
+    parser.add_argument('-b', '--batch_size', dest='batch_size',
+                        help='The size of batch.', type=int, required=False, default=1)
+
+    args = parser.parse_args()
+    config_info = {
+        'data_folder': args.data_folder,
+        'func_path': args.func_path,
+        'embed_path': args.embed_path,
+        'tag': args.tag,
+        'data_tag': args.data_tag,
+        'process_num': args.process_num,
+        'embed_dim': args.embed_dim,
+        'max_length': args.max_length,
+        'num_classes': args.num_classes,
+        'output_dir': args.output_dir,
+        'model_dir': args.model_dir,
+        'dropout': args.dropout,
+        'num_layers': args.num_layers,
+        'batch_size': args.batch_size,
+        'int2insn_path': args.int2insn_path
+    }
+    return config_info
+
+
+def main():
+    config_info = get_config()
+    xai_func = XaiFunction(config_info)
+    xai_func.workfolow()
+
+if __name__ == '__main__':
+    main()
+
 
 
 def prepare_data_deprecated():
@@ -388,7 +400,3 @@ def prepare_data_deprecated():
 
     # eval_predict.predict()
     eval_predict.main(feed_batch_dict)
-
-
-if __name__ == '__main__':
-    main()

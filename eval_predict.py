@@ -1,7 +1,7 @@
 import tensorflow as tf
 import numpy as np
 import dataset
-import dataset_caller
+# import dataset_caller
 import os
 import sys
 
@@ -121,10 +121,11 @@ class Model(object):
             self._length: self.feed_data_dict['length'],
             self._keep_prob: self.feed_data_dict['keep_prob_pl']
         }
+
         pred_result = self.session.run(self.pred_label, feed_dict=feed_dict)
         print "type in pred_result", type(pred_result)
         print "len in pred_result", len(pred_result)
-        print "data in pred_result", pred_result
+        # print "data in pred_result", pred_result
         predict_result['pred'].append(pred_result)
         # print "type in predict_result['pred']", type(predict_result['pred'][0])
         # print "len in predict_result['pred']", len(predict_result['pred'][0])
