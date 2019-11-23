@@ -101,6 +101,7 @@ class XaiFunction(object):
             # -------------- end (explain the prediction)-----------------------
 
             print "--------- end of new function: %d------------------------------" % index
+        print "-----------------match(predict/label)----------"
         print "match_num_false: ", match_num_false
         print "match_num_true: ", match_num_true
         sys.exit(0)
@@ -233,7 +234,11 @@ class XaiFunction(object):
         # print "shape of fea", fea.shape
         # print "data of hex_data_array", hex_data_array
         fea[significant_index[0:7]] = hex_data_array[significant_index[0:7]]
-        print "data of feature", fea.tolist()
+        print "hex value of feature: ", fea.tolist()
+        fea_string = np.zeros_like(self.inst_strings_array)
+        fea_string[significant_index[0:7]] = \
+            self.inst_strings_array[significant_index[0:7]]
+        print "string of feature: ", fea_string.tolist()
 
         # --------- end (prepare the input data for regression model)---------------
 
@@ -280,6 +285,12 @@ class XaiFunction(object):
 
     def convert_insn2int(self, data_batch):
         # ------------start(convert insn2int )---------------------------------------
+        # original instruction string data
+        inst_strings_list = data_batch['inst_strings'][0]
+        self.inst_strings_array = np.asarray(inst_strings_list)
+        print "type of inst_strings", type(self.inst_strings_array)
+        print "data of inst_strings", self.inst_strings_array
+
         # original embedding data
         # print "type of data_batch['data']", type(data_batch['data'][0])
         # print "shape of data_batch['data']", len(data_batch['data'][0])
