@@ -7,7 +7,7 @@ import sys
 
 import argparse
 import functools
-import pickle
+import cPickle as pickle
 import inspect
 
 
@@ -36,7 +36,8 @@ def placeholder_inputs(class_num, max_length, embedding_dim=256):
 
 class Model(object):
     # def __init__(self, session, my_data, config_info, data_pl, label_pl, length_pl, keep_prob_pl):
-    def __init__(self, session,  feed_data_dict, config_info, data_pl, label_pl, length_pl, keep_prob_pl):
+    def __init__(self, session,  feed_data_dict, config_info, data_pl,
+                 label_pl, length_pl, keep_prob_pl):
         self.session = session
         # self.datasets = my_data
         self.feed_data_dict = feed_data_dict
@@ -58,7 +59,8 @@ class Model(object):
     def probability(self):
         def lstm_cell():
             if 'reuse' in inspect.getargspec(tf.contrib.rnn.GRUCell.__init__).args:
-                return tf.contrib.rnn.GRUCell(self.emb_dim, reuse=tf.get_variable_scope().reuse)
+                return tf.contrib.rnn.GRUCell(
+                    self.emb_dim, reuse=tf.get_variable_scope().reuse)
             else:
                 return tf.contrib.rnn.GRUCell(self.emb_dim)
 
@@ -93,8 +95,11 @@ class Model(object):
     @lazy_property
     def pred_label(self):
         true_probability = tf.nn.softmax(self.probability)
-        print "type of true_probability", type(true_probability)
-        print "data of true_probability", true_probability
+        true_probability = tf.Print(
+            true_probability, [true_probability], "true_probability: ",
+            summarize=16)
+        # print "type of true_probability", type(true_probability)
+        # print "data of true_probability", true_probability
         pred_output = tf.argmax(true_probability, 1)
         # label_output = tf.argmax(self._label, 1)
         output_result = {
@@ -123,8 +128,8 @@ class Model(object):
         }
 
         pred_result = self.session.run(self.pred_label, feed_dict=feed_dict)
-        print "type in pred_result", type(pred_result)
-        print "len in pred_result", len(pred_result)
+        # print "type in pred_result", type(pred_result)
+        # print "len in pred_result", len(pred_result)
         # print "data in pred_result", pred_result
         predict_result['pred'].append(pred_result)
         # print "type in predict_result['pred']", type(predict_result['pred'][0])
@@ -145,7 +150,7 @@ def get_model_id_list(folder_path):
     return model_id_list
 
 
-def testing(feed_data_dict, config_info, func_name, max_length):
+def testing(feed_data_dict, config_info, func_name, max_length, sample_num):
     embed_dim = int(config_info['embed_dim'])
     # max_length = int(config_info['max_length'])
     num_classes = int(config_info['num_classes'])
@@ -182,12 +187,13 @@ def testing(feed_data_dict, config_info, func_name, max_length):
             print "entering for model_id"
             # result_path = os.path.join(
             #     output_dir, 'predict_result_%d_.label' % model_id)
-            predicted_file = 'model' + \
-                str(model_id) + '_' + func_name + '.predict'
+            predicted_file = 'model' + str(model_id) + '_' + func_name + \
+                '#sample_num_' + str(sample_num) + '.predict'
             result_path = os.path.join(output_dir, predicted_file)
             if os.path.exists(result_path):
                 with open(result_path, 'r') as f:
                     total_result = pickle.load(f)
+                print('Load the prediction result !!! ... %s' % result_path)
                 continue
             else:
                 pass
@@ -201,12 +207,13 @@ def testing(feed_data_dict, config_info, func_name, max_length):
             # my_data.test_tag = True
             with open(result_path, 'w') as f:
                 pickle.dump(total_result, f)
-            print('Save the test result !!! ... %s' % result_path)
+            print('Save the prediction result !!! ... %s' % result_path)
     return total_result
 
 
-def predict_main(feed_data_dict, config_info, func_name, max_length):
-    total_result = testing(feed_data_dict, config_info, func_name, max_length)
+def predict_main(feed_data_dict, config_info, func_name, max_length, sample_num):
+    total_result = testing(feed_data_dict, config_info, func_name,
+                           max_length, sample_num)
     return total_result
 
 
