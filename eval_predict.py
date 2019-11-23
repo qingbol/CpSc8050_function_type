@@ -145,9 +145,9 @@ def get_model_id_list(folder_path):
     return model_id_list
 
 
-def testing(feed_data_dict, config_info, func_name):
+def testing(feed_data_dict, config_info, func_name, max_length):
     embed_dim = int(config_info['embed_dim'])
-    max_length = int(config_info['max_length'])
+    # max_length = int(config_info['max_length'])
     num_classes = int(config_info['num_classes'])
     model_dir = config_info['model_dir']
     output_dir = config_info['output_dir']
@@ -205,17 +205,17 @@ def testing(feed_data_dict, config_info, func_name):
     return total_result
 
 
-def predict_main(feed_data_dict, config_info, func_name):
-    total_result = testing(feed_data_dict, config_info, func_name)
+def predict_main(feed_data_dict, config_info, func_name, max_length):
+    total_result = testing(feed_data_dict, config_info, func_name, max_length)
     return total_result
 
 
-def main(feed_data_dict):
-    config_info = get_config()
-    total_result = testing(config_info, feed_data_dict)
-    return total_result
+# def main(feed_data_dict):
+#     config_info = get_config()
+#     total_result = testing(config_info, feed_data_dict)
+#     return total_result
 
 
-if __name__ == '__main__':
-    feed_data_dict = {}
-    main(feed_data_dict)
+# if __name__ == '__main__':
+#     feed_data_dict = {}
+#     main(feed_data_dict)

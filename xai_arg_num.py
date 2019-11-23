@@ -10,6 +10,7 @@ import dataset
 import converter
 import eval_predict
 import argparse
+import configure
 import cPickle as pickle
 import numpy as np
 np.random.seed(1234)
@@ -32,23 +33,24 @@ class XaiFunction(object):
         data_tag = config_info['data_tag']
         self.process_num = int(config_info['process_num'])
         self.embed_dim = int(config_info['embed_dim'])
-        self.max_length = int(config_info['max_length'])
+        # self.max_length = int(config_info['max_length'])
         self.num_classes = int(config_info['num_classes'])
         model_dir = config_info['model_dir']
         self.output_dir = config_info['output_dir']
         self.int2insn_path = config_info['int2insn_path']
         self.batch_size = config_info['batch_size']
+        self.sample_num = int(config_info['sample_num'])
 
     def workfolow(self):
         with open(self.func_path) as f:
             func_info = pickle.load(f)
-        print "type of func_info:", type(func_info)
-        print "shape of func_info:", len(func_info)
+        # print "type of func_info:", type(func_info)
+        # print "shape of func_info:", len(func_info)
         # print "data of func_info", func_info
         func_lst = func_info['train']
-        print "type of func_lst:", type(func_lst)
+        # print "type of func_lst:", type(func_lst)
         print "shape of func_lst:", len(func_lst)
-        print "data of func_lst:", func_lst
+        # print "data of func_lst:", func_lst
 
         for index, func_name in enumerate(func_lst):
             self.func_name = func_name
@@ -57,22 +59,31 @@ class XaiFunction(object):
             print "func_name in func_lst:", self.func_name
             if index != 2 :
                 continue
+            # --------------start(read data )-----------------------------------
             func_lst_in_loop = []
             func_lst_in_loop.append(func_name)
-            print "type of  in func_lst_in_loop:", type(func_lst_in_loop)
-            print "data of  in func_lst_in_loop:", func_lst_in_loop
+            # print "type of  in func_lst_in_loop:", type(func_lst_in_loop)
+            # print "data of  in func_lst_in_loop:", func_lst_in_loop
             data_batch = self.read_func_data(func_lst_in_loop)
-            print "************label of {}**********".format(self.func_name)
-            print "type of  in data_batch['label']:", type(data_batch['label'])
+            # print "************label of {}**********".format(self.func_name)
+            # print "type of  in data_batch['label']:", type(data_batch['label'])
             print "data of  in data_batch['label']:", data_batch['label']
-            print "************label of {}**********".format(self.func_name)
+            # print "************label of {}**********".format(self.func_name)
+            # -------------- end (read data )-----------------------------------
 
-            embed_data_array, int_data_array, hex_data_array = convert_insn2int(data_batch)
-            # --------------start(prepare data for lemna)--------------------------------
-            self.xai_function_type(embed_data_array, int_data_array, hex_data_array)
-            # -------------- end (prepare data for lemna)--------------------------------
+            # --------------start(convert data )--------------------------------
+            embed_data_array, int_data_array, hex_data_array = \
+                                            self.convert_insn2int(data_batch)
+            # -------------- end (convert data )--------------------------------
+
+            # --------------start(explain the prediction)-----------------------
+            self.xai_function_type(embed_data_array, int_data_array, 
+                                    hex_data_array)
+            # -------------- end (explain the prediction)-----------------------
+
             print "--------- end of new function------------------------------"
         sys.exit(0)
+
 
     def read_func_data(self, func_lst_in_loop):
         # ------------start(retriev the target function data)------------------------
@@ -84,8 +95,9 @@ class XaiFunction(object):
                 data_batch = pickle.load(f)
             print('read the function data !!! ... %s' % function_data_path)
         else:
-            my_data = dataset.Dataset(self.data_folder, func_lst_in_loop, self.embed_path, self.process_num,
-                                    self.embed_dim, self.max_length, self.num_classes, self.tag, self.int2insn_path)
+            my_data = dataset.Dataset(self.data_folder, func_lst_in_loop, 
+                self.embed_path, self.process_num, self.embed_dim, 
+                self.max_length, self.num_classes, self.tag, self.int2insn_path)
             data_batch = my_data.get_batch(batch_size = self.batch_size)
             with open(function_data_path, 'w') as f:
                 pickle.dump(data_batch, f)
@@ -108,14 +120,16 @@ class XaiFunction(object):
         return data_batch 
 
 
-    def xai_function_type(self, embed_data_array, int_data_array, hex_data_array):
-        sample_num = 500
+    def xai_function_type(self, embed_data_array, int_data_array, 
+                        hex_data_array):
+        # sample_num = 500
+        # print "self.max_length", self.max_length
         tl = embed_data_array.shape[0]
         print "tl of embed_data_array.shape[0]", embed_data_array.shape[0]
         tc = embed_data_array.shape[1]
         print "tc of embed_data_array.shape[1]", embed_data_array.shape[1]
         half_tl = tl/2
-        sample = np.random.randint(1, tl+1, sample_num)
+        sample = np.random.randint(1, tl+1, self.sample_num)
         # print "sample len", len(sample)
         # print "sample shape: ", sample.shape
         # print "type of smaple", type(sample)
@@ -147,17 +161,17 @@ class XaiFunction(object):
             # print "shape of data_embed", data_embed.shape
         # print "type of data_embed", type(data_embed)
         # print "shape of data_embed", data_embed.shape
-        print "type of tmp_int", type(data_int)
+        # print "type of tmp_int", type(data_int)
         print "shape of tmp_int", data_int.shape
 
         # ---------start(prepare the dict which feed to eval)------------------------
-        data_length = np.empty(sample_num + 1)
+        data_length = np.empty(self.sample_num + 1)
         data_length.fill(tl)
         # print "type of data_length", type(data_length)
         # print "len of data_length", len(data_length)
         # print "shape of data_length", data_length.shape
         # print "data of data_length", data_length
-        data_label = np.empty([sample_num + 1, 16])
+        data_label = np.empty([self.sample_num + 1, 16])
         data_label.fill(0)
         # print "type of data_label", type(data_label)
         # print "len of data_label", len(data_label)
@@ -175,42 +189,50 @@ class XaiFunction(object):
         # print "data of feed_dict2[data_pl]", feed_batch_dict2['data'][0]
         # --------- end (prepare the dict which feed to eval)------------------------
 
+
         # ---------start(predict the label of 500 data)-----------------------------
-        print "func_name in func_lst:", self.func_name
-        total_result = eval_predict.predict_main(feed_batch_dict2, self.config_info, self.func_name)
-        print "type in total_result['pred']", type(total_result)
+        # print "func_name in func_lst:", self.func_name
+
+        total_result = eval_predict.predict_main(feed_batch_dict2, 
+                self.config_info, self.func_name, self.max_length)
+
+        # print "type in total_result['pred']", type(total_result)
         print "shape in total_result['pred']", total_result.shape
         print "label in total_result['pred']", total_result
-        label_sampled = total_result.reshape(sample_num + 1, 1)
+        label_sampled = total_result.reshape(self.sample_num + 1, 1)
         # print "type in label_sampled: ", type(label_sampled)
         # print "shape in label_sampled: ", label_sampled.shape
         # print "data  in label_sampled:", label_sampled
 
-        #-------convert the value in label to 1 or 0
+        #**********convert the value in label to 1 or 0 **************
         # label_sampled[label_sampled != 4] = 0
         # print "data  in total_result['pred']", label_sampled
         # label_sampled[label_sampled == 4] = 1
         # print "data  in total_result['pred']", label_sampled
         # --------- end (predict the label of 500 data)-----------------------------
 
+
         # ---------start(prepare the input data for regression model)---------------
-        X = r.matrix(data_embed, nrow = data_embed.shape[0], ncol = data_embed.shape[1])
+        X = r.matrix(data_embed, nrow = data_embed.shape[0], 
+                    ncol = data_embed.shape[1])
         # X = r.matrix(data_int, nrow = data_int.shape[0], ncol = data_int.shape[1])
-        print "type of X", type(X)
+        # print "type of X", type(X)
         # print "X data: ", X
-        Y = r.matrix(label_sampled, nrow = label_sampled.shape[0], ncol = label_sampled.shape[1])
-        print "type of Y", type(Y)
+        Y = r.matrix(label_sampled, nrow = label_sampled.shape[0], 
+                    ncol = label_sampled.shape[1])
+        # print "type of Y", type(Y)
         # print "Y data: ", Y
 
         n = r.nrow(X)
         p = r.ncol(X)
         results = r.fusedlasso1d(y=Y,X=X)
-        print "type of results: {}|row: {}|col: {}".format(type(results),r.nrow(results),r.ncol(results))
+        # print "type of results: {}|row: {}|col: {}".format(
+        #         type(results),r.nrow(results),r.ncol(results))
         result_original = np.array(r.coef(results, np.sqrt(n*np.log(p)))[0])
-        print "type of result_original: ", type(result_original)
+        # print "type of result_original: ", type(result_original)
         print "shape of result_original: ", result_original.shape
         result = np.array(r.coef(results, np.sqrt(n*np.log(p)))[0])[:,-1]
-        print "type of result: ", type(result)
+        # print "type of result: ", type(result)
         print "shape of result: ", result.shape
         # result_round=np.around(result, decimals=1)
         # print "data of result:{res:.2e} ".format(res=result)
@@ -218,57 +240,61 @@ class XaiFunction(object):
         significant_index = np.argsort(result)[::-1]
         print "data of significant_index: ", significant_index
         fea = np.zeros_like(hex_data_array) 
-        print "shape of fea", fea.shape
+        # print "shape of fea", fea.shape
         # print "data of hex_data_array", hex_data_array
         fea[significant_index[0:7]] = hex_data_array[significant_index[0:7]]
         print "data of feature", fea.tolist()
         
         # --------- end (prepare the input data for regression model)---------------
 
-def convert_insn2int(data_batch):
-    # ------------start(convert insn2int )---------------------------------------
-    # original embedding data
-    print "type of data_batch['data']", type(data_batch['data'][0])
-    print "shape of data_batch['data']", len(data_batch['data'][0])
-    # print "data of data_batch['data']", data_batch['data'][0]
-    embed_data_array = data_batch['data'][0]
-    print "type of embed_data_array", type(embed_data_array)
-    # print "data of embed_data_array", embed_data_array
-    # embed_data_array[0].fill(0)
-    # print "data of embed_data_array", embed_data_array
+    def convert_insn2int(self, data_batch):
+        # ------------start(convert insn2int )---------------------------------------
+        # original embedding data
+        # print "type of data_batch['data']", type(data_batch['data'][0])
+        # print "shape of data_batch['data']", len(data_batch['data'][0])
+        # print "data of data_batch['data']", data_batch['data'][0]
+        embed_data_array = data_batch['data'][0]
+        # print "type of embed_data_array", type(embed_data_array)
+        # print "data of embed_data_array", embed_data_array
+        # embed_data_array[0].fill(0)
+        # print "data of embed_data_array", embed_data_array
 
-    # original hex data
-    print "type of data_batch['inst_types']", type(data_batch['inst_bytes'][0])
-    print "shape of data_batch['inst_types']", len(data_batch['inst_bytes'][0])
-    print "data of data_batch['inst_types']", data_batch['inst_bytes'][0]
-    hex_data_list = data_batch['inst_bytes'][0]
-    print "type of hex_data_list", type(hex_data_list)
-    # print "data of hex_data_list", hex_data_list
-    hex_data_array = np.asarray(hex_data_list)
-    # hex_data_array = np.array(hex_data_list)
-    # hex_data_array = np.array([np.array(x) for x in hex_data_list])
-    # print "data of hex_data_array", hex_data_array
+        # original hex data
+        # print "type of data_batch['inst_types']", type(data_batch['inst_bytes'][0])
+        print "shape of data_batch['inst_types']", len(data_batch['inst_bytes'][0])
+        print "data of data_batch['inst_types']", data_batch['inst_bytes'][0]
+        hex_data_list = data_batch['inst_bytes'][0]
+        # print "type of hex_data_list", type(hex_data_list)
+        # print "data of hex_data_list", hex_data_list
+        hex_data_array = np.asarray(hex_data_list)
+        # hex_data_array = np.array(hex_data_list)
+        # hex_data_array = np.array([np.array(x) for x in hex_data_list])
+        # print "data of hex_data_array", hex_data_array
 
-    # int of hex data
-    int2insn_map, int_data_list = converter.main(hex_data_list)
-    print "type of int_data_list:", type(int_data_list)
-    print "int data of int_data_list:", int_data_list
-    print "type of int2insn_map:", type(int2insn_map)
-    print "data of int2insn_map:", int2insn_map
-    int_data_array = np.asarray(int_data_list)
-    print "type of int_data_array:", type(int_data_array)
-    print "shape of int_data_array:", int_data_array.shape
-    # print "data of int_data_array", int_data_array
+        # int of hex data
+        int2insn_map, int_data_list = converter.main(hex_data_list)
+        print "type of int_data_list:", type(int_data_list)
+        print "int data of int_data_list:", int_data_list
+        # print "type of int2insn_map:", type(int2insn_map)
+        # print "data of int2insn_map:", int2insn_map
+        int_data_array = np.asarray(int_data_list)
+        # print "type of int_data_array:", type(int_data_array)
+        # print "shape of int_data_array:", int_data_array.shape
+        # print "data of int_data_array", int_data_array
 
-    # bin_data_list = [int2insn_map[k]
-    #                  for k in int_data_list if k in int2insn_map]
-    # bin_data_list = [int2insn_map[int(k)] for k in int_data_list if int(k) in int2insn_map]
-    # print "type of bin_data_list", type(bin_data_list)
-    # print "len of bin_data_list", len(bin_data_list)
-    # print "data of bin_data_list", bin_data_list
+        # bin_data_list = [int2insn_map[k]
+        #                  for k in int_data_list if k in int2insn_map]
+        # bin_data_list = [int2insn_map[int(k)] for k in int_data_list if int(k) in int2insn_map]
+        # print "type of bin_data_list", type(bin_data_list)
+        # print "len of bin_data_list", len(bin_data_list)
+        # print "data of bin_data_list", bin_data_list
 
-    # ------------ end (convert insn2int )---------------------------------------
-    return embed_data_array, int_data_array, hex_data_array
+        #**********get mat_length*********************
+        self.max_length = int(data_batch['length'])
+        # print "data of max_length:", self.max_length
+
+        # ------------ end (convert insn2int )---------------------------------------
+        return embed_data_array, int_data_array, hex_data_array
 
 
 def get_config():
@@ -335,7 +361,7 @@ def get_config():
 
 
 def main():
-    config_info = get_config()
+    config_info = configure.get_config()
     xai_func = XaiFunction(config_info)
     xai_func.workfolow()
 
