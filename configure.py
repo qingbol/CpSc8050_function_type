@@ -2,8 +2,11 @@
 import argparse
 
 
-def get_config():
+def get_config(options):
     parser = argparse.ArgumentParser()
+    print "options: ", options
+    parser.add_argument('-idx', '--index_of_function', dest='func_index',
+                        help='the index of function to be test', type=int, required=False, default=0)
     parser.add_argument('-sn', '--sample_num', dest='sample_num',
                         help='the number of artificial data', type=int, required=False, default=500)
     # parser.add_argument('-ml', '--max_length', dest='max_length',
@@ -46,7 +49,7 @@ def get_config():
     parser.add_argument('-b', '--batch_size', dest='batch_size',
                         help='The size of batch.', type=int, required=False, default=1)
 
-    args = parser.parse_args()
+    args = parser.parse_args(options)
     config_info = {
         'data_folder': args.data_folder,
         'func_path': args.func_path,
@@ -63,6 +66,7 @@ def get_config():
         'num_layers': args.num_layers,
         'batch_size': args.batch_size,
         'int2insn_path': args.int2insn_path,
-        'sample_num': args.sample_num
+        'sample_num': args.sample_num,
+        'func_index': args.func_index
     }
     return config_info

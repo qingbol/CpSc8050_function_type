@@ -1,10 +1,11 @@
 '''
-script for explain argument nums of function type 
+script for explain argument nums of function type
 '''
 import rpy2.robjects.numpy2ri
 from rpy2.robjects.packages import importr
 from rpy2 import robjects
-import configure
+from configure import get_config
+# import configure
 import eval_predict
 import converter
 import dataset
@@ -13,7 +14,7 @@ import sys
 import cPickle as pickle
 import numpy as np
 np.random.seed(1234)
-#np.set_printoptions(threshold = 1e6)
+# np.set_printoptions(threshold = 1e6)
 np.set_printoptions(threshold=sys.maxsize)
 
 r = robjects.r
@@ -38,8 +39,10 @@ class XaiFunction(object):
         self.int2insn_path = config_info['int2insn_path']
         self.batch_size = config_info['batch_size']
         self.sample_num = int(config_info['sample_num'])
+        self.func_index = int(config_info['func_index'])
 
     def workfolow(self):
+        print "func_path: ", self.func_path
         with open(self.func_path) as f:
             func_info = pickle.load(f)
         # print "type of func_info:", type(func_info)
@@ -47,7 +50,7 @@ class XaiFunction(object):
         # print "data of func_info", func_info
         func_lst = func_info['train']
         # print "type of func_lst:", type(func_lst)
-        print "shape of func_lst:", len(func_lst)
+        print "shape of func_lst: ", len(func_lst)
         # print "data of func_lst:", func_lst
 
         for index, func_name in enumerate(func_lst):
@@ -55,7 +58,7 @@ class XaiFunction(object):
             print "---------start of new function: %d------------------------------" % index
             # print "index in func_lst:", index
             print "func_name in func_lst:", self.func_name
-            if index != 0:
+            if self.func_index != -1 and index != self.func_index:
                 continue
             # --------------start(read data )-----------------------------------
             func_lst_in_loop = []
@@ -103,7 +106,7 @@ class XaiFunction(object):
         else:
             my_data = dataset.Dataset(self.data_folder, func_lst_in_loop,
                                       self.embed_path, self.process_num, self.embed_dim,
-                                      self.instrunction_length, self.num_classes, self.tag, self.int2insn_path)
+                                      self.num_classes, self.tag, self.int2insn_path)
             data_batch = my_data.get_batch(batch_size=self.batch_size)
             with open(function_data_path, 'w') as f:
                 pickle.dump(data_batch, f)
@@ -323,11 +326,13 @@ class XaiFunction(object):
         return embed_data_array, int_data_array, hex_data_array
 
 
-def main():
-    config_info = configure.get_config()
+def main(options):
+    config_info = get_config(options)
+    # config_info = configure.get_config()
     xai_func = XaiFunction(config_info)
     xai_func.workfolow()
 
 
 if __name__ == '__main__':
-    main()
+    print "sys.argv[1:]", sys.argv
+    main(sys.argv[1:])
