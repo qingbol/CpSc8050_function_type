@@ -3,10 +3,12 @@
 ## Introduction:
 
 This project aimed to explian the result of RNN, which is used to predict the
-function type signature(argument numbers/types), by the method proposed in LEMNA.
-I follow paper of "Neural Nets Can Learn Function Type Signatures From Binaries"
+function type signature(argument numbers/types), by the method that is called
+LEMNA proposed in the paper of
+"LEMNA: Explaining Deep Learning based Security Applications".
+I followed the method proposed in the paper of "Neural Nets Can Learn Function Type Signatures From Binaries"
 to build the RNN based on the dataset that contains 5168 binaries. The author
-didn't give some detailed information to run the project and didn't release some
+didn't give enough detailed information of how to run the project and didn't release some
 scripts, such as the scripts used to get the function list.
 So I developed some scripts by myself and managed to run the project. <br />
 Because the structure of the dataset is totally different from that of LEMNA, so
@@ -90,8 +92,7 @@ The binary format of this function:
 
 The embedding value of this function:
 
-> [[ 4.9242502e-01 -6.3213439e+00 -2.1821052e-01 ... 5.3236794e-01 -4.7061494e-01 7.2240531e-02] <br /> [-1.4824426e-01 7.6710269e-02 2.1449502e-03 ... -9.8106312e-03 -1.5178236e-01 -4.9693279e-02]<br />
-> [-1.4415282e-01 6.8571813e-02 -8.1709184e-04 ... 2.6113811e-04 -1.5341897e-01 -4.9748953e-02] <br />
+> [[ 4.9242502e-01 -6.3213439e+00 -2.1821052e-01 ... 5.3236794e-01 -4.7061494e-01 7.2240531e-02] <br /> [-1.4824426e-01 7.6710269e-02 2.1449502e-03 ... -9.8106312e-03 -1.5178236e-01 -4.9693279e-02]<br /> > [-1.4415282e-01 6.8571813e-02 -8.1709184e-04 ... 2.6113811e-04 -1.5341897e-01 -4.9748953e-02] <br />
 > ...<br /> [ 1.7497748e+00 -1.2347011e-01 -1.6310322e+00 ... -1.3755658e+00 -1.6481979e-01 -1.5915378e+00]<br /> [ 7.6243961e-01 -2.6772411e+00 1.3527184e+00 ... 9.2628604e-01 -1.7080919e-01 1.4312527e+00] <br /> [ 5.9697060e-03 -4.4744587e-01 5.3603011e-01 ... -1.8529317e-01 1.2032903e+00 2.1198967e+00]]]
 
 The label of this function:
@@ -100,7 +101,7 @@ The label of this function:
 
 ### Generate artificial data.
 
-generate 500(or the number you think is better which is a superparameter) artificial function by randomly set some instructions to 0.
+generate 500(or the number you think is better which is a superparameter) artificial functions by randomly set some instructions to 0.
 
 ### Predict the argument number of each above functions.
 
