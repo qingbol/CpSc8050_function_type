@@ -50,11 +50,11 @@ class XaiFunction(object):
         # print "type of func_info:", type(func_info)
         # print "shape of func_info:", len(func_info)
         # print "data of func_info", func_info
-        # func_lst = func_info['test']
-        func_lst = func_info['train']
-        # print "type of func_lst:", type(func_lst)
-        print "shape of func_lst: ", len(func_lst)
-        # print "data of func_lst:", func_lst
+        # self.func_lst = func_info['test']
+        self.func_lst = func_info['train']
+        # print "type of self.func_lst:", type(self.func_lst)
+        print "shape of self.func_lst: ", len(self.func_lst)
+        # print "data of self.func_lst:", self.func_lst
 
         # cal the match(prediction/label) number
         match_num_true = 0
@@ -65,11 +65,12 @@ class XaiFunction(object):
         n_new_rand = 0
         n_neg_lemna = 0
         n_neg_rand = 0
-        for index, func_name in enumerate(func_lst):
+        for index, func_name in enumerate(self.func_lst):
+            self.index = index
             self.func_name = func_name
             print "---------start of new function: %d------------------------------" % index
-            # print "index in func_lst:", index
-            print "func_name in func_lst:", self.func_name
+            # print "index in self.func_lst:", index
+            print "func_name in self.func_lst:", self.func_name
             if self.func_index != -1 and index != self.func_index:
                 continue
             # --------------start(read data )-----------------------------------
@@ -112,6 +113,12 @@ class XaiFunction(object):
             pos_lemna, pos_rand = fidelity_test.pos_exp(15)
             n_pos_lemna += pos_lemna
             n_pos_rand += pos_rand
+            neg_lemna, neg_rand = fidelity_test.neg_exp(15)
+            n_neg_lemna += neg_lemna
+            n_neg_rand += neg_rand
+            new_lemna, new_rand = fidelity_test.new_exp(15)
+            n_new_lemna += new_lemna
+            n_new_rand += new_rand
 
             # -------------- end (fidelity evaluation)--------------------------
 
@@ -120,10 +127,20 @@ class XaiFunction(object):
         print "match_num_false: ", match_num_false
         print "match_num_true: ", match_num_true
         print "-----------------Acc(pos_exp)------------------"
-        print "Acc pos of LEMNA: ", float(n_pos_lemna)/match_num_true
-        print "Acc pos of Random: ", float(n_pos_rand)/match_num_true
-        print "-----------------Acc(new_exp)------------------"
+        print "Acc pos of LEMNA: {0:.2f}% ".format(
+            float(n_pos_lemna)/match_num_true*100)
+        print "Acc pos of Random: {0:.2f}%".format(
+            float(n_pos_rand)/match_num_true*100)
         print "-----------------Acc(neg_exp)------------------"
+        print "Acc neg of LEMNA: {0:.2f}% ".format(
+            float(n_neg_lemna)/match_num_true*100)
+        print "Acc neg of Random: {0:.2f}%".format(
+            float(n_neg_rand)/match_num_true*100)
+        print "-----------------Acc(new_exp)------------------"
+        print "Acc new of LEMNA: {0:.2f}% ".format(
+            float(n_new_lemna)/match_num_true*100)
+        print "Acc new of Random: {0:.2f}%".format(
+            float(n_new_rand)/match_num_true*100)
         sys.exit(0)
 
     def read_func_data(self, func_lst_in_loop):
@@ -160,6 +177,70 @@ class XaiFunction(object):
         # ******* end (used to predict the label of this data_batch)********
         # ------------ end (retriev the target function data)------------------------
         return data_batch
+
+    def convert_insn2int(self, data_batch):
+        # ------------start(convert insn2int )---------------------------------------
+        # **********start(get mat_length/label )*********************
+        self.instrunction_length = int(data_batch['length'])
+        # print "data of instrunction_length:", self.instrunction_length
+
+        # print "************label of {}**********".format(self.func_name)
+        # print "type of  in data_batch['label']:", type(data_batch['label'])
+        print "data of  in data_batch['label']:", data_batch['label']
+        # print "************label of {}**********".format(self.func_name)
+        self.real_arg_num = np.argmax(data_batch['label'])
+        print "data of real_arg_num:", self.real_arg_num
+        # ********** end (get mat_length/label )*********************
+
+        # original instruction string data
+        inst_asm_list = data_batch['inst_strings']
+        self.inst_asm_array = np.asarray(
+            inst_asm_list).reshape(self.instrunction_length, 1)
+        print "type of inst_strings", type(self.inst_asm_array)
+        print "shape of inst_strings", self.inst_asm_array.shape
+        print "data of inst_strings", self.inst_asm_array
+
+        # original embedding data
+        # print "type of data_batch['data']", type(data_batch['data'][0])
+        # print "shape of data_batch['data']", len(data_batch['data'][0])
+        # print "data of data_batch['data']", data_batch['data'][0]
+        self.embed_data_array = data_batch['data'][0]
+        # print "type of self.embed_data_array", type(self.embed_data_array)
+        # print "data of self.embed_data_array", self.embed_data_array
+        # self.embed_data_array[0].fill(0)
+        # print "data of self.embed_data_array", self.embed_data_array
+
+        # original hex data
+        # print "type of data_batch['inst_types']", type(data_batch['inst_bytes'][0])
+        print "shape of data_batch['inst_types']", len(
+            data_batch['inst_bytes'][0])
+        print "data of data_batch['inst_types']", data_batch['inst_bytes'][0]
+        hex_data_list = data_batch['inst_bytes'][0]
+        # print "type of hex_data_list", type(hex_data_list)
+        # print "data of hex_data_list", hex_data_list
+        self.hex_data_array = np.asarray(hex_data_list)
+        # self.hex_data_array = np.array(hex_data_list)
+        # self.hex_data_array = np.array([np.array(x) for x in hex_data_list])
+        # print "data of self.hex_data_array", self.hex_data_array
+
+        # int of hex data
+        int2insn_map, int_data_list = converter.main(hex_data_list)
+        print "type of int_data_list:", type(int_data_list)
+        print "int data of int_data_list:", int_data_list
+        # print "type of int2insn_map:", type(int2insn_map)
+        # print "data of int2insn_map:", int2insn_map
+        self.int_data_array = np.asarray(int_data_list)
+        # print "type of self.int_data_array:", type(self.int_data_array)
+        # print "shape of self.int_data_array:", self.int_data_array.shape
+        # print "data of self.int_data_array", self.int_data_array
+
+        # bin_data_list = [int2insn_map[k]
+        #                  for k in int_data_list if k in int2insn_map]
+        # bin_data_list = [int2insn_map[int(k)] for k in int_data_list if int(k) in int2insn_map]
+        # print "type of bin_data_list", type(bin_data_list)
+        # print "len of bin_data_list", len(bin_data_list)
+        # print "data of bin_data_list", bin_data_list
+        # ------------ end (convert insn2int )---------------------------------------
 
     def xai_function_type(self):
         # sample_num = 500
@@ -307,70 +388,6 @@ class XaiFunction(object):
         # print "label in predicted_result['pred']", predicted_result
         # --------- end (predict the label of 500 data)-----------------------------
         return predicted_result
-
-    def convert_insn2int(self, data_batch):
-        # ------------start(convert insn2int )---------------------------------------
-        # **********start(get mat_length/label )*********************
-        self.instrunction_length = int(data_batch['length'])
-        # print "data of instrunction_length:", self.instrunction_length
-
-        # print "************label of {}**********".format(self.func_name)
-        # print "type of  in data_batch['label']:", type(data_batch['label'])
-        print "data of  in data_batch['label']:", data_batch['label']
-        # print "************label of {}**********".format(self.func_name)
-        self.real_arg_num = np.argmax(data_batch['label'])
-        print "data of real_arg_num:", self.real_arg_num
-        # ********** end (get mat_length/label )*********************
-
-        # original instruction string data
-        inst_asm_list = data_batch['inst_strings']
-        self.inst_asm_array = np.asarray(
-            inst_asm_list).reshape(self.instrunction_length, 1)
-        print "type of inst_strings", type(self.inst_asm_array)
-        print "shape of inst_strings", self.inst_asm_array.shape
-        print "data of inst_strings", self.inst_asm_array
-
-        # original embedding data
-        # print "type of data_batch['data']", type(data_batch['data'][0])
-        # print "shape of data_batch['data']", len(data_batch['data'][0])
-        # print "data of data_batch['data']", data_batch['data'][0]
-        self.embed_data_array = data_batch['data'][0]
-        # print "type of self.embed_data_array", type(self.embed_data_array)
-        # print "data of self.embed_data_array", self.embed_data_array
-        # self.embed_data_array[0].fill(0)
-        # print "data of self.embed_data_array", self.embed_data_array
-
-        # original hex data
-        # print "type of data_batch['inst_types']", type(data_batch['inst_bytes'][0])
-        print "shape of data_batch['inst_types']", len(
-            data_batch['inst_bytes'][0])
-        print "data of data_batch['inst_types']", data_batch['inst_bytes'][0]
-        hex_data_list = data_batch['inst_bytes'][0]
-        # print "type of hex_data_list", type(hex_data_list)
-        # print "data of hex_data_list", hex_data_list
-        self.hex_data_array = np.asarray(hex_data_list)
-        # self.hex_data_array = np.array(hex_data_list)
-        # self.hex_data_array = np.array([np.array(x) for x in hex_data_list])
-        # print "data of self.hex_data_array", self.hex_data_array
-
-        # int of hex data
-        int2insn_map, int_data_list = converter.main(hex_data_list)
-        print "type of int_data_list:", type(int_data_list)
-        print "int data of int_data_list:", int_data_list
-        # print "type of int2insn_map:", type(int2insn_map)
-        # print "data of int2insn_map:", int2insn_map
-        self.int_data_array = np.asarray(int_data_list)
-        # print "type of self.int_data_array:", type(self.int_data_array)
-        # print "shape of self.int_data_array:", self.int_data_array.shape
-        # print "data of self.int_data_array", self.int_data_array
-
-        # bin_data_list = [int2insn_map[k]
-        #                  for k in int_data_list if k in int2insn_map]
-        # bin_data_list = [int2insn_map[int(k)] for k in int_data_list if int(k) in int2insn_map]
-        # print "type of bin_data_list", type(bin_data_list)
-        # print "len of bin_data_list", len(bin_data_list)
-        # print "data of bin_data_list", bin_data_list
-        # ------------ end (convert insn2int )---------------------------------------
 
 
 def main(options):
