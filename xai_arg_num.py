@@ -73,12 +73,11 @@ class XaiFunction(object):
             # -------------- end (read data )-----------------------------------
 
             # --------------start(convert data )--------------------------------
-            embed_data_array, int_data_array, hex_data_array = \
-                self.convert_insn2int(data_batch)
+            self.convert_insn2int(data_batch)
             # -------------- end (convert data )--------------------------------
 
             # --------------start(check the correctness of prediction)----------
-            data_embed = embed_data_array.reshape(
+            data_embed = self.embed_data_array.reshape(
                 1, self.instrunction_length, self.embed_dim)
             predicted_result = self.predict(data_embed, 1)
             # print "type of predicted_result", type(predicted_result)
@@ -97,9 +96,12 @@ class XaiFunction(object):
             # -------------- end (check the correctness of prediction)----------
 
             # --------------start(explain the prediction)-----------------------
-            self.xai_function_type(embed_data_array, int_data_array,
-                                   hex_data_array)
+            self.xai_function_type()
             # -------------- end (explain the prediction)-----------------------
+
+            # --------------start(fidelity evaluation)--------------------------
+            fidelity_test = Fidelity_test(self)
+            # -------------- end (fidelity evaluation)--------------------------
 
             print "--------- end of new function: %d------------------------------" % index
         print "-----------------match(predict/label)----------"
@@ -142,14 +144,13 @@ class XaiFunction(object):
         # ------------ end (retriev the target function data)------------------------
         return data_batch
 
-    def xai_function_type(self, embed_data_array, int_data_array,
-                          hex_data_array):
+    def xai_function_type(self):
         # sample_num = 500
         # print "self.max_length", self.max_length
-        self.embed_row = embed_data_array.shape[0]
-        print "embed_row of embed_data_array.shape[0]", embed_data_array.shape[0]
-        self.embed_col = embed_data_array.shape[1]
-        print "embed_col of embed_data_array.shape[1]", embed_data_array.shape[1]
+        self.embed_row = self.embed_data_array.shape[0]
+        print "embed_row of self.embed_data_array.shape[0]", self.embed_data_array.shape[0]
+        self.embed_col = self.embed_data_array.shape[1]
+        print "embed_col of self.embed_data_array.shape[1]", self.embed_data_array.shape[1]
         # half_tl = self.embed_row/2
         sample = np.random.randint(
             1, self.instrunction_length+1, self.sample_num)
@@ -163,22 +164,23 @@ class XaiFunction(object):
         # print "feature_range len", len(features_range)
         # print "feature_range data: ", features_range
 
-        data_embed = np.copy(embed_data_array).reshape(
+        data_embed = np.copy(self.embed_data_array).reshape(
             1, self.instrunction_length, self.embed_dim)
-        data_int = np.copy(int_data_array).reshape(1, self.instrunction_length)
-        # print "data of int_data_array", int_data_array
+        data_int = np.copy(self.int_data_array).reshape(
+            1, self.instrunction_length)
+        # print "data of self.int_data_array", self.int_data_array
         # print "data of data_int", data_int
         for i, size in enumerate(sample, start=1):
             inactive = np.random.choice(features_range, size, replace=False)
             # print "type of inactive", type(inactive)
             # print 'inactive --->', inactive
-            tmp_embed = np.copy(embed_data_array)
+            tmp_embed = np.copy(self.embed_data_array)
             tmp_embed[inactive] = 0
             tmp_embed = tmp_embed.reshape(
                 1, self.instrunction_length, self.embed_dim)
             data_embed = np.concatenate((data_embed, tmp_embed), axis=0)
 
-            tmp_int = np.copy(int_data_array)
+            tmp_int = np.copy(self.int_data_array)
             tmp_int[inactive] = 0
             tmp_int = tmp_int.reshape(1, self.instrunction_length)
             data_int = np.concatenate((data_int, tmp_int), axis=0)
@@ -231,12 +233,12 @@ class XaiFunction(object):
         print "data of result: ", np.array_str(result, precision=2)
         significant_index = np.argsort(result)[::-1]
         print "data of significant_index: ", significant_index
-        fea = np.zeros_like(hex_data_array)
+        fea = np.zeros_like(self.hex_data_array)
         # print "shape of fea", fea.shape
-        # print "data of hex_data_array", hex_data_array
-        print "type of hex_data_array", type(hex_data_array)
-        print "shape of hex_data_array", hex_data_array.shape
-        fea[significant_index[0:7]] = hex_data_array[significant_index[0:7]]
+        # print "data of self.hex_data_array", self.hex_data_array
+        print "type of self.hex_data_array", type(self.hex_data_array)
+        print "shape of self.hex_data_array", self.hex_data_array.shape
+        fea[significant_index[0:7]] = self.hex_data_array[significant_index[0:7]]
         print "hex value of feature: ", fea.tolist()
         fea_string = np.zeros_like(self.inst_strings_array)
         fea_string[significant_index[0:7]] = \
@@ -312,11 +314,11 @@ class XaiFunction(object):
         # print "type of data_batch['data']", type(data_batch['data'][0])
         # print "shape of data_batch['data']", len(data_batch['data'][0])
         # print "data of data_batch['data']", data_batch['data'][0]
-        embed_data_array = data_batch['data'][0]
-        # print "type of embed_data_array", type(embed_data_array)
-        # print "data of embed_data_array", embed_data_array
-        # embed_data_array[0].fill(0)
-        # print "data of embed_data_array", embed_data_array
+        self.embed_data_array = data_batch['data'][0]
+        # print "type of self.embed_data_array", type(self.embed_data_array)
+        # print "data of self.embed_data_array", self.embed_data_array
+        # self.embed_data_array[0].fill(0)
+        # print "data of self.embed_data_array", self.embed_data_array
 
         # original hex data
         # print "type of data_batch['inst_types']", type(data_batch['inst_bytes'][0])
@@ -326,10 +328,10 @@ class XaiFunction(object):
         hex_data_list = data_batch['inst_bytes'][0]
         # print "type of hex_data_list", type(hex_data_list)
         # print "data of hex_data_list", hex_data_list
-        hex_data_array = np.asarray(hex_data_list)
-        # hex_data_array = np.array(hex_data_list)
-        # hex_data_array = np.array([np.array(x) for x in hex_data_list])
-        # print "data of hex_data_array", hex_data_array
+        self.hex_data_array = np.asarray(hex_data_list)
+        # self.hex_data_array = np.array(hex_data_list)
+        # self.hex_data_array = np.array([np.array(x) for x in hex_data_list])
+        # print "data of self.hex_data_array", self.hex_data_array
 
         # int of hex data
         int2insn_map, int_data_list = converter.main(hex_data_list)
@@ -337,10 +339,10 @@ class XaiFunction(object):
         print "int data of int_data_list:", int_data_list
         # print "type of int2insn_map:", type(int2insn_map)
         # print "data of int2insn_map:", int2insn_map
-        int_data_array = np.asarray(int_data_list)
-        # print "type of int_data_array:", type(int_data_array)
-        # print "shape of int_data_array:", int_data_array.shape
-        # print "data of int_data_array", int_data_array
+        self.int_data_array = np.asarray(int_data_list)
+        # print "type of self.int_data_array:", type(self.int_data_array)
+        # print "shape of self.int_data_array:", self.int_data_array.shape
+        # print "data of self.int_data_array", self.int_data_array
 
         # bin_data_list = [int2insn_map[k]
         #                  for k in int_data_list if k in int2insn_map]
@@ -349,7 +351,6 @@ class XaiFunction(object):
         # print "len of bin_data_list", len(bin_data_list)
         # print "data of bin_data_list", bin_data_list
         # ------------ end (convert insn2int )---------------------------------------
-        return embed_data_array, int_data_array, hex_data_array
 
 
 def main(options):
