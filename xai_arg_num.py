@@ -1,14 +1,16 @@
 '''
 script for explain argument nums of function type
 '''
+from rpy2 import robjects
 import rpy2.robjects.numpy2ri
 from rpy2.robjects.packages import importr
-from rpy2 import robjects
-from configure import get_config
-# import configure
-import eval_predict
-import converter
+
+from fidelity_eval import Fidelity_test
 import dataset
+import converter
+import eval_predict
+from configure import get_config
+
 import os
 import sys
 import cPickle as pickle
@@ -57,6 +59,12 @@ class XaiFunction(object):
         # cal the match(prediction/label) number
         match_num_true = 0
         match_num_false = 0
+        n_pos_lemna = 0
+        n_pos_rand = 0
+        n_new_lemna = 0
+        n_new_rand = 0
+        n_neg_lemna = 0
+        n_neg_rand = 0
         for index, func_name in enumerate(func_lst):
             self.func_name = func_name
             print "---------start of new function: %d------------------------------" % index
@@ -101,12 +109,21 @@ class XaiFunction(object):
 
             # --------------start(fidelity evaluation)--------------------------
             fidelity_test = Fidelity_test(self)
+            pos_lemna, pos_rand = fidelity_test.pos_exp(15)
+            n_pos_lemna += pos_lemna
+            n_pos_rand += pos_rand
+
             # -------------- end (fidelity evaluation)--------------------------
 
             print "--------- end of new function: %d------------------------------" % index
         print "-----------------match(predict/label)----------"
         print "match_num_false: ", match_num_false
         print "match_num_true: ", match_num_true
+        print "-----------------Acc(pos_exp)------------------"
+        print "Acc pos of LEMNA: ", float(n_pos_lemna)/match_num_true
+        print "Acc pos of Random: ", float(n_pos_rand)/match_num_true
+        print "-----------------Acc(new_exp)------------------"
+        print "-----------------Acc(neg_exp)------------------"
         sys.exit(0)
 
     def read_func_data(self, func_lst_in_loop):
@@ -232,18 +249,21 @@ class XaiFunction(object):
         # print "data of result:{res:.2e} ".format(res=result)
         print "data of result: ", np.array_str(result, precision=2)
         significant_index = np.argsort(result)[::-1]
-        print "data of significant_index: ", significant_index
-        fea = np.zeros_like(self.hex_data_array)
+        self.sig_idx = significant_index
+        print "data of self.sig_idx: ", self.sig_idx
+
+        fea_hex = np.zeros_like(self.hex_data_array)
         # print "shape of fea", fea.shape
         # print "data of self.hex_data_array", self.hex_data_array
         print "type of self.hex_data_array", type(self.hex_data_array)
         print "shape of self.hex_data_array", self.hex_data_array.shape
-        fea[significant_index[0:7]] = self.hex_data_array[significant_index[0:7]]
-        print "hex value of feature: ", fea.tolist()
-        fea_string = np.zeros_like(self.inst_strings_array)
-        fea_string[significant_index[0:7]] = \
-            self.inst_strings_array[significant_index[0:7]]
-        print "string of feature: ", fea_string.tolist()
+        fea_hex[self.sig_idx[0:7]] = self.hex_data_array[self.sig_idx[0:7]]
+        print "hex value of feature: ", fea_hex.tolist()
+
+        fea_asm = np.zeros_like(self.inst_asm_array)
+        fea_asm[self.sig_idx[0:7]
+                ] = self.inst_asm_array[self.sig_idx[0:7]]
+        print "assembly of feature: ", fea_asm.tolist()
 
         # --------- end (prepare the input data for regression model)---------------
 
@@ -303,12 +323,12 @@ class XaiFunction(object):
         # ********** end (get mat_length/label )*********************
 
         # original instruction string data
-        inst_strings_list = data_batch['inst_strings']
-        self.inst_strings_array = np.asarray(
-            inst_strings_list).reshape(self.instrunction_length, 1)
-        print "type of inst_strings", type(self.inst_strings_array)
-        print "shape of inst_strings", self.inst_strings_array.shape
-        print "data of inst_strings", self.inst_strings_array
+        inst_asm_list = data_batch['inst_strings']
+        self.inst_asm_array = np.asarray(
+            inst_asm_list).reshape(self.instrunction_length, 1)
+        print "type of inst_strings", type(self.inst_asm_array)
+        print "shape of inst_strings", self.inst_asm_array.shape
+        print "data of inst_strings", self.inst_asm_array
 
         # original embedding data
         # print "type of data_batch['data']", type(data_batch['data'][0])

@@ -185,16 +185,18 @@ def testing(feed_data_dict, config_info, func_name, max_length, sample_num):
 
         for model_id in model_id_list:
             print "entering for model_id"
-            # result_path = os.path.join(
+            # predicted_path = os.path.join(
             #     output_dir, 'predict_result_%d_.label' % model_id)
             predicted_file = 'model' + str(model_id) + '_' + func_name + \
                 '#sample_num_' + str(sample_num) + '.predict'
-            result_path = os.path.join(output_dir, predicted_file)
-            if os.path.exists(result_path):
-                with open(result_path, 'r') as f:
-                    total_result = pickle.load(f)
-                print('Load the prediction result !!! ... %s' % result_path)
-                continue
+            predicted_path = os.path.join(output_dir, predicted_file)
+            if os.path.exists(predicted_path):
+                # with open(predicted_path, 'r') as f:
+                #     total_result = pickle.load(f)
+                os.remove(predicted_path)
+                print('Deleted the prediction result !!! ... %s' %
+                      predicted_path)
+                # continue
             else:
                 pass
             model_path = os.path.join(model_dir, 'model-%d' % model_id)
@@ -205,9 +207,9 @@ def testing(feed_data_dict, config_info, func_name, max_length, sample_num):
             print "after model test"
             # my_data._index_in_test = 0
             # my_data.test_tag = True
-            with open(result_path, 'w') as f:
+            with open(predicted_path, 'w') as f:
                 pickle.dump(total_result, f)
-            print('Save the prediction result !!! ... %s' % result_path)
+            print('Save the prediction result !!! ... %s' % predicted_path)
     return total_result
 
 
