@@ -48,6 +48,7 @@ class XaiFunction(object):
         # print "type of func_info:", type(func_info)
         # print "shape of func_info:", len(func_info)
         # print "data of func_info", func_info
+        # func_lst = func_info['test']
         func_lst = func_info['train']
         # print "type of func_lst:", type(func_lst)
         print "shape of func_lst: ", len(func_lst)
@@ -233,6 +234,8 @@ class XaiFunction(object):
         fea = np.zeros_like(hex_data_array)
         # print "shape of fea", fea.shape
         # print "data of hex_data_array", hex_data_array
+        print "type of hex_data_array", type(hex_data_array)
+        print "shape of hex_data_array", hex_data_array.shape
         fea[significant_index[0:7]] = hex_data_array[significant_index[0:7]]
         print "hex value of feature: ", fea.tolist()
         fea_string = np.zeros_like(self.inst_strings_array)
@@ -285,10 +288,24 @@ class XaiFunction(object):
 
     def convert_insn2int(self, data_batch):
         # ------------start(convert insn2int )---------------------------------------
+        # **********start(get mat_length/label )*********************
+        self.instrunction_length = int(data_batch['length'])
+        # print "data of instrunction_length:", self.instrunction_length
+
+        # print "************label of {}**********".format(self.func_name)
+        # print "type of  in data_batch['label']:", type(data_batch['label'])
+        print "data of  in data_batch['label']:", data_batch['label']
+        # print "************label of {}**********".format(self.func_name)
+        self.real_arg_num = np.argmax(data_batch['label'])
+        print "data of real_arg_num:", self.real_arg_num
+        # ********** end (get mat_length/label )*********************
+
         # original instruction string data
-        inst_strings_list = data_batch['inst_strings'][0]
-        self.inst_strings_array = np.asarray(inst_strings_list)
+        inst_strings_list = data_batch['inst_strings']
+        self.inst_strings_array = np.asarray(
+            inst_strings_list).reshape(self.instrunction_length, 1)
         print "type of inst_strings", type(self.inst_strings_array)
+        print "shape of inst_strings", self.inst_strings_array.shape
         print "data of inst_strings", self.inst_strings_array
 
         # original embedding data
@@ -331,19 +348,6 @@ class XaiFunction(object):
         # print "type of bin_data_list", type(bin_data_list)
         # print "len of bin_data_list", len(bin_data_list)
         # print "data of bin_data_list", bin_data_list
-
-        # **********start(get mat_length/label )*********************
-        self.instrunction_length = int(data_batch['length'])
-        # print "data of instrunction_length:", self.instrunction_length
-
-        # print "************label of {}**********".format(self.func_name)
-        # print "type of  in data_batch['label']:", type(data_batch['label'])
-        print "data of  in data_batch['label']:", data_batch['label']
-        # print "************label of {}**********".format(self.func_name)
-        self.real_arg_num = np.argmax(data_batch['label'])
-        print "data of real_arg_num:", self.real_arg_num
-        # ********** end (get mat_length/label )*********************
-
         # ------------ end (convert insn2int )---------------------------------------
         return embed_data_array, int_data_array, hex_data_array
 

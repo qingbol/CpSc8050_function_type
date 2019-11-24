@@ -20,7 +20,7 @@ def get_config(options):
                         type=str, required=False, default='/Users/tarus/OnlyInMac/dataset/eklavya/clean_pickles/x64')
     # parser.add_argument('-d', '--data_folder', dest='data_folder', help='The data folder of testing dataset.', type=str, required=True)
     parser.add_argument('-f', '--split_func_path', dest='func_path', help='The path of file saving the training & testing function names.',
-                        type=str, required=False, default='/Users/tarus/TarusHome/10SrcFldr/CpSc8580EKLAVYA_py27/code/embedding/func_list/func_dict_x64_len40_gcc.lst')
+                        type=str, required=False, default='/Users/tarus/TarusHome/11git_repo/CpSc8580Lemna_fuction_type/func_list/func_dict_x64_len40_gcc.lst')
     # parser.add_argument('-f', '--split_func_path', dest='func_path', help='The path of file saving the training & testing function names.', type=str, required=True)
     parser.add_argument('-e', '--embed_path', dest='embed_path', help='The path of file saving embedding vectors.',
                         type=str, required=False, default='/Users/tarus/OnlyInMac/dataset/eklavya/embed.pkl')
@@ -37,7 +37,7 @@ def get_config(options):
     parser.add_argument('-dt', '--data_tag', dest='data_tag', help='The type of input data.',
                         type=str, required=False, choices=['caller', 'callee'], default='callee')
     parser.add_argument('-pn', '--process_num', dest='process_num',
-                        help='Number of processes.', type=int, required=False, default=4)
+                        help='Number of processes.', type=int, required=False, default=40)
     parser.add_argument('-ed', '--embedding_dim', dest='embed_dim',
                         help='The dimension of embedding vector.', type=int, required=False, default=256)
     # parser.add_argument('-ml', '--max_length', dest='max_length', help='The maximun length of input sequences.', type=int, required=False, default=10)

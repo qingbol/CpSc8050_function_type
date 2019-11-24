@@ -18,7 +18,7 @@ import random
 
 
 def get_file_tree(folder_path):
-    file_tree = open("file_tree.txt", "w")
+    file_tree = open("./func_list/file_tree.txt", "w")
     i = 0
     split_func_dict_x64 = {}
     split_func_dict_x64["train"] = []
@@ -82,8 +82,8 @@ def get_func_list(root, file_list):
         # print pkl_file_total
         progress = float(pkl_file_num)/pkl_file_total
         # print progress
-        print "root:{0}, len(func_list):{1},progress : {2:.1f}%". \
-            format(os.path.basename(root), len(func_list), progress*100)
+        print "root:{0}, len(func_list):{1},progress : {2:.1f}%\r" . \
+            format(os.path.basename(root), len(func_list), progress*100),
         if 'gcc' in pkl_file:
             pkl_file_path = os.path.join(root, pkl_file)
             f = open(pkl_file_path)
@@ -109,7 +109,7 @@ def get_func_list(root, file_list):
     print "len of func_list", index
     func_list_train = func_list[:index]
     func_list_test = func_list[index:]
-    return func_list_test, func_list_test
+    return func_list_train, func_list_test
 
     # print root
     # print dirs
