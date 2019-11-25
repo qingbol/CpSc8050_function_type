@@ -12,6 +12,7 @@ target_model/
 tmp/
 eval_output/
 func_list/
+log/
 
 #c program
 *.o

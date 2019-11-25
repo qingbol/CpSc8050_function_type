@@ -6,6 +6,8 @@ import argparse
 def get_config(options):
     print "options: ", options
     parser = argparse.ArgumentParser()
+    parser.add_argument('-fn', '--feature_num', dest='feature_num',
+                        help='the feature_num for evaluation', type=int, required=False, default=15)
     parser.add_argument('-idx', '--index_of_function', dest='func_index',
                         help='the index of function to be test', type=int, required=False, default=0)
     parser.add_argument('-sn', '--sample_num', dest='sample_num',
@@ -68,6 +70,7 @@ def get_config(options):
         'batch_size': args.batch_size,
         'int2insn_path': args.int2insn_path,
         'sample_num': args.sample_num,
-        'func_index': args.func_index
+        'func_index': args.func_index,
+        'feature_num': args.feature_num
     }
     return config_info

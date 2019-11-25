@@ -1,6 +1,7 @@
 '''
 script for explain argument nums of function type
 '''
+import time
 from rpy2 import robjects
 import rpy2.robjects.numpy2ri
 from rpy2.robjects.packages import importr
@@ -26,7 +27,7 @@ importr('genlasso')
 
 
 class XaiFunction(object):
-    def __init__(self, config_info):
+    def __init__(self, config_info, file_all_path, file_acc_path):
         print "entering tst main"
         self.config_info = config_info
         self.data_folder = config_info['data_folder']
@@ -42,6 +43,20 @@ class XaiFunction(object):
         self.batch_size = config_info['batch_size']
         self.sample_num = int(config_info['sample_num'])
         self.func_index = int(config_info['func_index'])
+        self.feature_num = int(config_info['feature_num'])
+
+        self.file_all_path = file_all_path
+        self.file_acc_path = file_acc_path
+
+    def __enter__(self):
+        if os.path.exists(self.file_all_path):
+            os.remove(self.file_all_path)
+        self.log_all_file = open(self.file_all_path, 'a+')
+        self.log_acc_file = open(self.file_acc_path, 'a+')
+
+    def __exit__(self, exception_type, exception_value, traceback):
+        self.log_all_file.close()
+        self.log_acc_file.close()
 
     def workfolow(self):
         print "func_path: ", self.func_path
@@ -57,18 +72,18 @@ class XaiFunction(object):
         # print "data of self.func_lst:", self.func_lst
 
         # cal the match(prediction/label) number
-        match_num_true = 0
-        match_num_false = 0
-        n_pos_lemna = 0
-        n_pos_rand = 0
-        n_new_lemna = 0
-        n_new_rand = 0
-        n_neg_lemna = 0
-        n_neg_rand = 0
+        self.match_num_true = 0
+        self.match_num_false = 0
+        self.n_pos_lemna = 0
+        self.n_pos_rand = 0
+        self.n_new_lemna = 0
+        self.n_new_rand = 0
+        self.n_neg_lemna = 0
+        self.n_neg_rand = 0
         for index, func_name in enumerate(self.func_lst):
             self.index = index
             self.func_name = func_name
-            print "---------start of new function: %d------------------------------" % index
+            print "---------start of new function: %d------------------------------" % self.index
             # print "index in self.func_lst:", index
             print "func_name in self.func_lst:", self.func_name
             if self.func_index != -1 and index != self.func_index:
@@ -97,10 +112,10 @@ class XaiFunction(object):
                 print "data of real_arg_num of 1: ", self.real_arg_num
                 print "data of predicted_arg_num of 1: ", self.predicted_arg_num
                 print "Error: predicted_arg_num don't match real_arg_num"
-                match_num_false += 1
+                self.match_num_false += 1
                 continue
             else:
-                match_num_true += 1
+                self.match_num_true += 1
                 pass
             # -------------- end (check the correctness of prediction)----------
 
@@ -110,37 +125,38 @@ class XaiFunction(object):
 
             # --------------start(fidelity evaluation)--------------------------
             fidelity_test = Fidelity_test(self)
-            pos_lemna, pos_rand = fidelity_test.pos_exp(15)
-            n_pos_lemna += pos_lemna
-            n_pos_rand += pos_rand
-            neg_lemna, neg_rand = fidelity_test.neg_exp(15)
-            n_neg_lemna += neg_lemna
-            n_neg_rand += neg_rand
-            new_lemna, new_rand = fidelity_test.new_exp(15)
-            n_new_lemna += new_lemna
-            n_new_rand += new_rand
-
+            pos_lemna, pos_rand = fidelity_test.pos_exp(self.feature_num)
+            self.n_pos_lemna += pos_lemna
+            self.n_pos_rand += pos_rand
+            neg_lemna, neg_rand = fidelity_test.neg_exp(self.feature_num)
+            self.n_neg_lemna += neg_lemna
+            self.n_neg_rand += neg_rand
+            new_lemna, new_rand = fidelity_test.new_exp(self.feature_num)
+            self.n_new_lemna += new_lemna
+            self.n_new_rand += new_rand
             # -------------- end (fidelity evaluation)--------------------------
-
-            print "--------- end of new function: %d------------------------------" % index
+            self.log_all()
+            print "--------- end of new function: %d------------------------------" % self.index
         print "-----------------match(predict/label)----------"
-        print "match_num_false: ", match_num_false
-        print "match_num_true: ", match_num_true
+        print "match_num_false: ", self.match_num_false
+        print "match_num_true: ", self.match_num_true
         print "-----------------Acc(pos_exp)------------------"
         print "Acc pos of LEMNA: {0:.2f}% ".format(
-            float(n_pos_lemna)/match_num_true*100)
+            float(self.n_pos_lemna)/self.match_num_true*100)
         print "Acc pos of Random: {0:.2f}%".format(
-            float(n_pos_rand)/match_num_true*100)
+            float(self.n_pos_rand)/self.match_num_true*100)
         print "-----------------Acc(neg_exp)------------------"
         print "Acc neg of LEMNA: {0:.2f}% ".format(
-            float(n_neg_lemna)/match_num_true*100)
+            float(self.n_neg_lemna)/self.match_num_true*100)
         print "Acc neg of Random: {0:.2f}%".format(
-            float(n_neg_rand)/match_num_true*100)
+            float(self.n_neg_rand)/self.match_num_true*100)
         print "-----------------Acc(new_exp)------------------"
         print "Acc new of LEMNA: {0:.2f}% ".format(
-            float(n_new_lemna)/match_num_true*100)
+            float(self.n_new_lemna)/self.match_num_true*100)
         print "Acc new of Random: {0:.2f}%".format(
-            float(n_new_rand)/match_num_true*100)
+            float(self.n_new_rand)/self.match_num_true*100)
+
+        self.log_acc()
         sys.exit(0)
 
     def read_func_data(self, func_lst_in_loop):
@@ -322,14 +338,15 @@ class XaiFunction(object):
         result_original = np.array(r.coef(results, np.sqrt(n*np.log(p)))[0])
         # print "type of result_original: ", type(result_original)
         print "shape of result_original: ", result_original.shape
-        result = np.array(r.coef(results, np.sqrt(n*np.log(p)))[0])[:, -1]
+        self.coef = np.array(r.coef(results, np.sqrt(n*np.log(p)))[0])[:, -1]
         # print "type of result: ", type(result)
-        print "shape of result: ", result.shape
+        print "shape of predicted result: ", self.coef.shape
         # print "data of real_arg_num:", self.real_arg_num
         # result_round=np.around(result, decimals=1)
-        # print "data of result:{res:.2e} ".format(res=result)
-        print "data of result: ", np.array_str(result, precision=2)
-        significant_index = np.argsort(result)[::-1]
+        # print "data of predicted self.coef:{res:.2e} ".format(res=self.coef)
+        print "data of predicted result: ", np.array_str(
+            self.coef, precision=4)
+        significant_index = np.argsort(self.coef)[::-1]
         self.sig_idx = significant_index
         print "data of self.sig_idx: ", self.sig_idx
 
@@ -338,12 +355,13 @@ class XaiFunction(object):
         # print "data of self.hex_data_array", self.hex_data_array
         print "type of self.hex_data_array", type(self.hex_data_array)
         print "shape of self.hex_data_array", self.hex_data_array.shape
-        fea_hex[self.sig_idx[0:7]] = self.hex_data_array[self.sig_idx[0:7]]
+        fea_hex[self.sig_idx[0:self.feature_num]
+                ] = self.hex_data_array[self.sig_idx[0:self.feature_num]]
         print "hex value of feature: ", fea_hex.tolist()
 
         fea_asm = np.zeros_like(self.inst_asm_array)
-        fea_asm[self.sig_idx[0:7]
-                ] = self.inst_asm_array[self.sig_idx[0:7]]
+        fea_asm[self.sig_idx[0:self.feature_num]
+                ] = self.inst_asm_array[self.sig_idx[0:self.feature_num]]
         print "assembly of feature: ", fea_asm.tolist()
 
         # --------- end (prepare the input data for regression model)---------------
@@ -389,12 +407,73 @@ class XaiFunction(object):
         # --------- end (predict the label of 500 data)-----------------------------
         return predicted_result
 
+    def write_all(self, msg):
+        return self.log_all_file.write(msg)
+
+    def write_acc(self, msg):
+        return self.log_acc_file.write(msg)
+
+    def log_acc(self):
+        self.write_acc(
+            "**********************feature num: {}******************************\n"
+            .format(self.feature_num))
+        self.write_acc("-----------------match(predict/label)----------\n")
+        self.write_acc("match_num_false: {} \n".format(self.match_num_false))
+        self.write_acc("match_num_true: {} \n".format(self.match_num_true))
+        self.write_acc("-----------------Acc(pos_exp)------------------\n")
+        self.write_acc("Acc pos of LEMNA: {0:.2f}% \n".format(
+            float(self.n_pos_lemna)/self.match_num_true*100))
+        self.write_acc("Acc pos of Random: {0:.2f}%\n".format(
+            float(self.n_pos_rand)/self.match_num_true*100))
+        self.write_acc("-----------------Acc(neg_exp)------------------\n")
+        self.write_acc("Acc neg of LEMNA: {0:.2f}% \n".format(
+            float(self.n_neg_lemna)/self.match_num_true*100))
+        self.write_acc("Acc neg of Random: {0:.2f}%\n".format(
+            float(self.n_neg_rand)/self.match_num_true*100))
+        self.write_acc("-----------------Acc(new_exp)------------------\n")
+        self.write_acc("Acc new of LEMNA: {0:.2f}% \n".format(
+            float(self.n_new_lemna)/self.match_num_true*100))
+        self.write_acc("Acc new of Random: {0:.2f}%\n".format(
+            float(self.n_new_rand)/self.match_num_true*100))
+        self.write_acc("\n")
+        self.write_acc("\n")
+
+    def log_all(self):
+        # self.write_all(
+            # "*********function num = {} ************\n".format(self.match_num_true))
+        self.write_all("---------start of new function. no|index : {}|{} -----------------------\n"
+                       .format(self.match_num_true, self.index))
+        self.write_all(
+            "func_name in self.func_lst: " + self.func_name + "\n")
+        self.write_all("\n")
+        self.write_all(
+            "data of real_arg_num : %s\n" % self.real_arg_num)
+        self.write_all(
+            "data of predicted_arg_num: {} \n".format(self.predicted_arg_num))
+        self.write_all("shape of assembly code: {}\n".format(
+            self.inst_asm_array.shape))
+        self.write_all("Assembly code:\n{}\n".format(self.inst_asm_array))
+        self.write_all("\n")
+        self.write_all(
+            "shape of predicted result: {} \n".format(self.coef.shape))
+        self.write_all("coefficients of each feature:\n{}\n".format(
+            np.array_str(self.coef, precision=4)))
+        self.write_all(
+            "ranked index of most important feature:\n{}\n".format(self.sig_idx))
+        self.write_all("\n")
+        self.write_all("\n")
+
 
 def main(options):
     config_info = get_config(options)
     # config_info = configure.get_config()
-    xai_func = XaiFunction(config_info)
-    xai_func.workfolow()
+    time_str = time.strftime("%Y%m%d-%H%M")
+    file_all = "./log/log_all_" + time_str + ".txt"
+    file_acc = "./log/log_acc" + time_str + ".txt"
+    # file_acc = "./log/log_acc.txt"
+    xai_func = XaiFunction(config_info, file_all, file_acc)
+    with xai_func:
+        xai_func.workfolow()
 
 
 if __name__ == '__main__':
