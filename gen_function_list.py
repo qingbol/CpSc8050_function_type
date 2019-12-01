@@ -94,7 +94,9 @@ def get_func_list(root, file_list):
                 func_len = len(temp['functions'][func_name]['inst_bytes'])
                 num_args = temp['functions'][func_name]['num_args']
                 # if func_len == 40:
-                if func_len == 40 and num_args > 3:
+                # if func_len == 40 and num_args > 3:
+                if func_len == 40 and num_args ==3 :
+                # if func_len == 40:
                     func_num_sub += 1
                     func_list.append(pkl_file + "#" + func_name)
                 # func_list.append(pkl_file + "#" + func_name)
@@ -125,7 +127,9 @@ def get_config():
     parser = argparse.ArgumentParser()
 
     parser.add_argument('-i', '--input_folder_path', dest='input_folder_path',
-                        help='The data folder saving binaries information.', type=str, required=True)
+                        help='The data folder saving binaries information.',
+                        type=str, required=False,
+                        default='/Users/tarus/OnlyInMac/dataset/eklavya/clean_pickles')
     # parser.add_argument('-o', '--output_path', dest='output_path' ,help='The file saving the input for embedding model.', type=str, required=False, default='embed_input')
     # parser.add_argument('-e', '--error_path', dest='error_path' ,help='The file saving all error information. ', type=str, required=False, default='error_log')
     # parser.add_argument('-m', '--int2insn_map_path', dest='int2insn_map_path', help='The file saving the map information (int -> instruction (int list)).', type=str, required=False, default='int2insn.map')

@@ -468,8 +468,10 @@ def main(options):
     config_info = get_config(options)
     # config_info = configure.get_config()
     time_str = time.strftime("%Y%m%d-%H%M")
-    file_all = "./log/log_all_" + time_str + ".txt"
-    file_acc = "./log/log_acc" + time_str + ".txt"
+    file_all = "./log/log_all_" + \
+        str(config_info['feature_num']) + "_" + time_str + ".txt"
+    file_acc = "./log/log_acc" + \
+        str(config_info['feature_num']) + "_" + time_str + ".txt"
     # file_acc = "./log/log_acc.txt"
     xai_func = XaiFunction(config_info, file_all, file_acc)
     with xai_func:

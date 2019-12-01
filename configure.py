@@ -22,7 +22,7 @@ def get_config(options):
                         type=str, required=False, default='/Users/tarus/OnlyInMac/dataset/eklavya/clean_pickles/x64')
     # parser.add_argument('-d', '--data_folder', dest='data_folder', help='The data folder of testing dataset.', type=str, required=True)
     parser.add_argument('-f', '--split_func_path', dest='func_path', help='The path of file saving the training & testing function names.',
-                        type=str, required=False, default='/Users/tarus/TarusHome/11git_repo/CpSc8580Lemna_fuction_type/func_list/func_dict_x64_len40_gcc.lst')
+                        type=str, required=False, default='/Users/tarus/TarusHome/11git_repo/CpSc8580Lemna_fuction_type/func_list/func_dict_x64_len40_gcc_arg3.lst')
     # parser.add_argument('-f', '--split_func_path', dest='func_path', help='The path of file saving the training & testing function names.', type=str, required=True)
     parser.add_argument('-e', '--embed_path', dest='embed_path', help='The path of file saving embedding vectors.',
                         type=str, required=False, default='/Users/tarus/OnlyInMac/dataset/eklavya/embed.pkl')
