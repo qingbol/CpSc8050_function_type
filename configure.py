@@ -9,7 +9,7 @@ def get_config(options):
     parser.add_argument('-fn', '--feature_num', dest='feature_num',
                         help='the feature_num for evaluation', type=int, required=False, default=15)
     parser.add_argument('-idx', '--index_of_function', dest='func_index',
-                        help='the index of function to be test', type=int, required=False, default=0)
+                        help='the index of function to be test', type=int, required=False, default=1)
     parser.add_argument('-sn', '--sample_num', dest='sample_num',
                         help='the number of artificial data', type=int, required=False, default=500)
     # parser.add_argument('-ml', '--max_length', dest='max_length',
@@ -22,7 +22,7 @@ def get_config(options):
                         type=str, required=False, default='/Users/tarus/OnlyInMac/dataset/eklavya/clean_pickles/x64')
     # parser.add_argument('-d', '--data_folder', dest='data_folder', help='The data folder of testing dataset.', type=str, required=True)
     parser.add_argument('-f', '--split_func_path', dest='func_path', help='The path of file saving the training & testing function names.',
-                        type=str, required=False, default='/Users/tarus/TarusHome/11git_repo/CpSc8580Lemna_fuction_type/func_list/func_dict_x64_len40_gcc_arg3.lst')
+                        type=str, required=False, default='/Users/tarus/TarusHome/11git_repo/CpSc8580Lemna_fuction_type/func_list/func_dict_x64_len40_gcc_arg4-n.lst')
     # parser.add_argument('-f', '--split_func_path', dest='func_path', help='The path of file saving the training & testing function names.', type=str, required=True)
     parser.add_argument('-e', '--embed_path', dest='embed_path', help='The path of file saving embedding vectors.',
                         type=str, required=False, default='/Users/tarus/OnlyInMac/dataset/eklavya/embed.pkl')

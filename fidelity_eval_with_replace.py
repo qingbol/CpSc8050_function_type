@@ -1,4 +1,3 @@
-import random
 import numpy as np
 np.random.seed(1234)
 
@@ -23,8 +22,7 @@ class Fidelity_test(object):
         n_pos_lemna = 1 if pred_pos_lemna[0] == self.xai_obj.real_arg_num else 0
         print "n_pos_lemna: ", n_pos_lemna
 
-        random_fea = random.sample(range(0, 40), num_fea)
-        # random_fea = np.random.randint(0, 40, num_fea)
+        random_fea = np.random.randint(0, 40, num_fea)
         test_data_pos_rand = np.copy(self.xai_obj.embed_data_array)
         test_data_pos_rand[random_fea] = 0
         test_data_pos_rand = test_data_pos_rand.reshape(
@@ -67,8 +65,7 @@ class Fidelity_test(object):
         print "n_neg_lemna: ", n_neg_lemna
 
         test_data_neg_rand = np.copy(test_data_seed)
-        random_fea = random.sample(range(0, 40), num_fea)
-        # random_fea = np.random.randint(0, 40, num_fea)
+        random_fea = np.random.randint(0, 40, num_fea)
         test_data_neg_rand[random_fea] = self.xai_obj.embed_data_array[random_fea]
         test_data_neg_rand = test_data_neg_rand.reshape(
             1, self.xai_obj.instrunction_length, self.xai_obj.embed_dim)
@@ -92,8 +89,7 @@ class Fidelity_test(object):
         print "n_new_lemna: ", n_new_lemna
 
         test_data_new_rand = np.zeros_like(self.xai_obj.embed_data_array)
-        # random_fea = np.random.randint(0, 40, num_fea)
-        random_fea = random.sample(range(0, 40), num_fea)
+        random_fea = np.random.randint(0, 40, num_fea)
         test_data_new_rand[random_fea] = self.xai_obj.embed_data_array[random_fea]
         test_data_new_rand = test_data_new_rand.reshape(
             1, self.xai_obj.instrunction_length, self.xai_obj.embed_dim)
