@@ -141,20 +141,20 @@ class XaiFunction(object):
         print "-----------------match(predict/label)----------"
         print "match_num_false: ", self.match_num_false
         print "match_num_true: ", self.match_num_true
-        print "-----------------Acc(pos_exp)------------------"
-        print "Acc pos of LEMNA: {0:.2f}% ".format(
+        print "-----------------PCR(pos_exp)------------------"
+        print "PCR pos of LEMNA: {0:.2f}% ".format(
             float(self.n_pos_lemna)/self.match_num_true*100)
-        print "Acc pos of Random: {0:.2f}%".format(
+        print "PCR pos of Random: {0:.2f}%".format(
             float(self.n_pos_rand)/self.match_num_true*100)
-        print "-----------------Acc(neg_exp)------------------"
-        print "Acc neg of LEMNA: {0:.2f}% ".format(
+        print "-----------------PCR(neg_exp)------------------"
+        print "PCR neg of LEMNA: {0:.2f}% ".format(
             float(self.n_neg_lemna)/self.match_num_true*100)
-        print "Acc neg of Random: {0:.2f}%".format(
+        print "PCR neg of Random: {0:.2f}%".format(
             float(self.n_neg_rand)/self.match_num_true*100)
-        print "-----------------Acc(new_exp)------------------"
-        print "Acc new of LEMNA: {0:.2f}% ".format(
+        print "-----------------PCR(new_exp)------------------"
+        print "PCR new of LEMNA: {0:.2f}% ".format(
             float(self.n_new_lemna)/self.match_num_true*100)
-        print "Acc new of Random: {0:.2f}%".format(
+        print "PCR new of Random: {0:.2f}%".format(
             float(self.n_new_rand)/self.match_num_true*100)
 
         self.log_acc()
@@ -421,20 +421,20 @@ class XaiFunction(object):
         self.write_acc("-----------------match(predict/label)----------\n")
         self.write_acc("match_num_false: {} \n".format(self.match_num_false))
         self.write_acc("match_num_true: {} \n".format(self.match_num_true))
-        self.write_acc("-----------------Acc(pos_exp)------------------\n")
-        self.write_acc("Acc pos of LEMNA: {0:.2f}% \n".format(
+        self.write_acc("-----------------PCR(pos_exp)------------------\n")
+        self.write_acc("PCR pos of LEMNA: {0:.2f}% \n".format(
             float(self.n_pos_lemna)/self.match_num_true*100))
-        self.write_acc("Acc pos of Random: {0:.2f}%\n".format(
+        self.write_acc("PCR pos of Random: {0:.2f}%\n".format(
             float(self.n_pos_rand)/self.match_num_true*100))
         self.write_acc("-----------------Acc(neg_exp)------------------\n")
-        self.write_acc("Acc neg of LEMNA: {0:.2f}% \n".format(
+        self.write_acc("PCR neg of LEMNA: {0:.2f}% \n".format(
             float(self.n_neg_lemna)/self.match_num_true*100))
-        self.write_acc("Acc neg of Random: {0:.2f}%\n".format(
+        self.write_acc("PCR neg of Random: {0:.2f}%\n".format(
             float(self.n_neg_rand)/self.match_num_true*100))
         self.write_acc("-----------------Acc(new_exp)------------------\n")
-        self.write_acc("Acc new of LEMNA: {0:.2f}% \n".format(
+        self.write_acc("PCR new of LEMNA: {0:.2f}% \n".format(
             float(self.n_new_lemna)/self.match_num_true*100))
-        self.write_acc("Acc new of Random: {0:.2f}%\n".format(
+        self.write_acc("PCR new of Random: {0:.2f}%\n".format(
             float(self.n_new_rand)/self.match_num_true*100))
         self.write_acc("\n")
         self.write_acc("\n")
