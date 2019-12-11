@@ -51,9 +51,25 @@ https://drive.google.com/drive/folders/1oiSp5Ak1Lg6Dyg6WIJylIkW9dgmpJLBE?usp=sha
   > python gen_function_list.py -i /folder_of_clean_pickles
   <!-- > python gen_function_list.py -i /Users/tarus/OnlyInMac/dataset/eklavya/clean_pickles -->
 
+### Set the dataset path.
+
+In configure.py, modify the corresponding parameter.
+
+<pre><code> 
+parser.add_argument('-i', '--int2insn_map_path', dest='int2insn_path', help='The pickle file saving int -> instruction mapping.',
+                        type=str, required=False, default='/Users/tarus/TarusHome/10SrcFldr/CpSc8580EKLAVYA_py27/code/embedding/int2insn.map')
+parser.add_argument('-d', '--data_folder', dest='data_folder', help='The data folder of testing dataset.',
+                    type=str, required=False, default='/Users/tarus/OnlyInMac/dataset/eklavya/clean_pickles/x64')
+parser.add_argument('-f', '--split_func_path', dest='func_path', help='The path of file saving the training & testing function names.',
+                    type=str, required=False, default='/Users/tarus/TarusHome/11git_repo/CpSc8580Lemna_fuction_type/func_list/func_dict_x64_len40_gcc_arg4-n.lst')
+                    type=str, required=False, default='/Users/tarus/OnlyInMac/dataset/eklavya/embed.pkl')
+parser.add_argument('-m', '--model_dir', dest='model_dir', help='The directory saved the models.',
+                    type=str, required=False, default='/Users/tarus/OnlyInMac/dataset/eklavya/rnn_output/model') 
+</code></pre>
+
 ### Set the function list and length of this function.
 
-In xai_arg_num.py, modify the parameter in these two below statements.
+In configure.py, modify the parameter in these two below statements.
 
 <pre><code>parser.add_argument('-f', '--split_func_path', dest='func_path', help='The path of file saving the training & testing function names.',type=str, required=False, default='/path_to_your_function_list/func_dict_xxx.lst')
 
@@ -68,9 +84,20 @@ In xai_arg_num.py, modify the parameter in this statement.
     if index != 1 :
         continue</code></pre>
 
+Now, you can set this in command line. For example, if you want to explain the
+3th function. You can do it by
+
+<pre><code> python xai_arg_num.py -idx 3</code></pre>
+
 ### Run the entry function.
 
+Run with default setting.
+
 <pre><code> python xai_arg_num.py</code></pre>
+
+Run with specific feature number. For example feature number = 20.
+
+<pre><code> python xai_arg_num.py -fn 20</code></pre>
 
 ## The workflow in entry function
 
